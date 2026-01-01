@@ -30,7 +30,7 @@ Transactional sales records at **invoice level** (one row per invoice). This fil
 
 ### Grain
 
-* **1 row per invoice**
+* **1 row per invoice_id / product_id**
 
 ### Columns
 
