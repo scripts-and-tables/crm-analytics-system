@@ -32,6 +32,8 @@ The system operates on three core datasets:
 
 Raw data is stored in its original structure and transformed through controlled analytics layers.
 
+Input files data model: `/docs/source_files_specification.md`.
+
 ---
 
 ## Design Requirements
@@ -43,6 +45,9 @@ The system is designed with the following requirements in mind:
 * deterministic, explainable segmentation rules
 * time-aware customer analysis
 * compatibility with downstream reporting tools
+
+Project requirements: `/docs/project_requirements.md`.
+
 
 ---
 
@@ -57,7 +62,7 @@ The system is designed with the following requirements in mind:
 * **RFMT-based value segmentation**
   Active customers are further segmented using Recency, Frequency, Monetary, and Tenure features.
 
-Full definitions, thresholds, and examples are documented in `/docs/business_logic.md`.
+Calculation / Segmentation full details: `/docs/crm_calculation_logic.md`.
 
 ---
 
