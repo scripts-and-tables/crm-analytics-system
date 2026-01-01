@@ -67,6 +67,8 @@ The analytics approach implemented in this system is inspired by established CRM
 
 RFM/RFMT-based segmentation is a well-known, empirically validated methodology used in direct marketing, loyalty programs, and customer value analysis, providing a transparent and business-interpretable alternative to black-box models.
 
+More about RFM on [Wikipedia](https://en.wikipedia.org/wiki/RFM_(market_research))
+
 ---
 
 ## Outputs
