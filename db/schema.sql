@@ -14,13 +14,13 @@ BEGIN;
 -- =========================
 CREATE TABLE IF NOT EXISTS raw_sales_transactions (
     txn_id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    invoice_id   TEXT,
-    customer_id  TEXT NOT NULL,
-    invoice_date TEXT NOT NULL,          -- ISO: YYYY-MM-DD
-    product_id   TEXT NOT NULL,
+    invoice_id   TEXT NOT NULL,
+    customer_id  INT NOT NULL,
+    invoice_date INT NOT NULL,          -- ISO: YYYY-MM-DD
+    product_id   INT NOT NULL,
     quantity     REAL NOT NULL,
     revenue      REAL NOT NULL,
-    store_id     TEXT,
+    store_id     INT NOT NULL,
 
     CHECK (invoice_date GLOB '????-??-??')
 );
@@ -43,11 +43,11 @@ CREATE INDEX IF NOT EXISTS ix_raw_sales_invoice_id
 -- RAW: Customers Master
 -- =========================
 CREATE TABLE IF NOT EXISTS raw_customers (
-    customer_id    TEXT PRIMARY KEY,
+    customer_id    INTEGER PRIMARY KEY NOT NULL,
     customer_name  TEXT,
     customer_group TEXT,
     city           TEXT,
-    created_date   TEXT,                 -- ISO: YYYY-MM-DD (nullable if unknown)
+    created_date   TEXT NOT NULL,        -- ISO: YYYY-MM-DD (nullable if unknown)
     email          TEXT,                 -- nullable
     mobile_number  TEXT,                 -- nullable (keep as TEXT)
     opt_email      INTEGER,              -- nullable, expected 0/1
@@ -71,11 +71,11 @@ CREATE INDEX IF NOT EXISTS ix_raw_customers_city
 -- RAW: Products (Items) Master
 -- =========================
 CREATE TABLE IF NOT EXISTS raw_products (
-    product_id   TEXT PRIMARY KEY,
-    product_name TEXT,
-    brand        TEXT,
-    category     TEXT,
-    grammage_g   REAL NOT NULL
+    product_id   INTEGER PRIMARY KEY NOT NULL,
+    product_name TEXT NOT NULL,
+    brand        TEXT NOT NULL,
+    category     TEXT NOT NULL,
+    grammage_g   REAL
 );
 
 CREATE INDEX IF NOT EXISTS ix_raw_products_category
