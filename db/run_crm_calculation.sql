@@ -1,5 +1,5 @@
-
 -- STAGING - DATES - 01
+
 DROP TABLE IF EXISTS tt_dates;
 CREATE TEMP TABLE tt_dates AS
 WITH dt_ AS
@@ -76,12 +76,15 @@ select
 	case when sales_12m > 0 THEN 1 ELSE 0 END AS crm_active,
 
 	CASE
-		WHEN sales_06m / 6.0 >= 25 AND num_invoices_06m >=50 THEN 'ULTRA'
-		WHEN sales_06m / 6.0 >= 20 AND num_invoices_06m >=50  THEN 'HEAVY'
-		WHEN sales_06m / 6.0 >= 15  THEN 'LARGE'
-		WHEN sales_06m / 6.0 >= 10  THEN 'AVERAGE'
-		WHEN sales_06m / 6.0 >= 5   THEN 'LOW'
-		WHEN sales_06m / 6.0 >  0   THEN 'MINIMAL'
+		WHEN sales_12m > 0 AND sales_12m = sales_all 			THEN 'NEW'
+		WHEN sales_all > 0 AND sales_12m = 0					THEN 'LOST'
+		WHEN sales_all > 0 AND sales_06m = 0					THEN 'LOST'
+		WHEN sales_06m / 6.0 >= 25 AND num_invoices_06m >=50 	THEN 'ULTRA'
+		WHEN sales_06m / 6.0 >= 20 AND num_invoices_06m >=50  	THEN 'HEAVY'
+		WHEN sales_06m / 6.0 >= 15  							THEN 'LARGE'
+		WHEN sales_06m / 6.0 >= 10 								THEN 'AVERAGE'
+		WHEN sales_06m / 6.0 >= 5   							THEN 'LOW'
+		WHEN sales_06m / 6.0 >  0   							THEN 'MINIMAL'
 	END AS crm_segment,
 
 	CASE

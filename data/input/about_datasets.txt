@@ -1,0 +1,5 @@
+data_sample.db
+---
+customers 	- 5,000 lines
+sales 		- 974,595 lines
+items 		- 98 lines
