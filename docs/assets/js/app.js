@@ -79,14 +79,17 @@ function buildFilters() {
   buildChips("filter-group",    groups,                    state.filters.group);
 
   document.getElementById("filter-reset").addEventListener("click", () => {
-    state.filters.activity = new Set(["Active"]);
-    state.filters.tier  = new Set();
-    state.filters.event = new Set();
-    state.filters.group = new Set();
+    // Clear in place so the closures captured by buildChips() still
+    // reference the same Set instances. Replacing the Sets would orphan
+    // the chip click handlers and silently break filtering after reset.
+    state.filters.activity.clear(); state.filters.activity.add("Active");
+    state.filters.tier.clear();
+    state.filters.event.clear();
+    state.filters.group.clear();
     state.page = 0;
     document.querySelectorAll(".chip-set").forEach(set => {
+      const which = set.id.replace("filter-", "");
       set.querySelectorAll(".chip").forEach(chip => {
-        const which = set.id.replace("filter-", "");
         chip.classList.toggle("on", state.filters[which].has(chip.dataset.value));
       });
     });
@@ -119,9 +122,13 @@ function bindTabs() {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       btn.classList.add("active");
-      document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
-      // Plotly needs a redraw when made visible from display:none.
-      window.dispatchEvent(new Event("resize"));
+      const panel = document.getElementById("tab-" + btn.dataset.tab);
+      panel.classList.add("active");
+      // Plotly charts created while display:none keep zero width. After the
+      // tab becomes visible, ask Plotly to re-measure each chart container.
+      panel.querySelectorAll(".chart").forEach(div => {
+        if (div._fullLayout) Plotly.Plots.resize(div);
+      });
     });
   });
 }
