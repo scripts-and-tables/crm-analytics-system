@@ -41,14 +41,16 @@ SELECT
     -- Anonymous / general customer-group marker (case-insensitive equality).
     'general'     AS anonymous_group,
 
-    -- Value Tier thresholds (placeholders, see docs §5.2).
+    -- Value Tier thresholds, calibrated against the synthetic dataset
+    -- produced by scripts/generate_data/generate.py. Tweak alongside any
+    -- material change to the persona mix.
     -- Units / month thresholds on Average Monthly Consumption (AMC = M6/6).
-    100.0         AS t_high,        -- Diamond / Platinum AMC floor
-     50.0         AS t_mid_high,    -- Gold AMC floor
-     20.0         AS t_mid,         -- Silver AMC floor
+   1000.0         AS t_high,        -- Diamond / Platinum AMC floor
+    200.0         AS t_mid_high,    -- Gold AMC floor
+     50.0         AS t_mid,         -- Silver AMC floor
 
-    -- Average Order Size threshold (Diamond only).
-     20.0         AS a_high,
+    -- Average Order Size threshold (Diamond only): consistent large baskets.
+   1500.0         AS a_high,
 
     -- Frequency gates: number of consumable orders in last 6 months.
         6         AS f_high,        -- Diamond

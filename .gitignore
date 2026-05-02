@@ -1,1 +1,14 @@
 /data/input/data.db
+
+# Generated synthetic data (rebuild with scripts/generate_data/generate.py)
+/data/input/*.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# SQLite scratch
+*.db-journal
+*.sqlite
