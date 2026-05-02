@@ -72,8 +72,29 @@ The `M*` fields are deliberately overlapping (each is a cumulative window ending
 | **First Device Purchase Date**     | `MIN(invoice_date)` over `device` transactions         | Entry into the customer base.               |
 | **First Consumable Purchase Date** | `MIN(invoice_date)` over `consumable` transactions     | Start of consumable lifecycle.              |
 | **Last Consumable Purchase Date**  | `MAX(invoice_date)` over `consumable` transactions     | Most recent recurring engagement.           |
+| **Tenure Months**                  | calendar months between `first_consumable_purchase_date` and `report_month_end`, **inclusive of the first purchase month** (NULL if customer has never purchased a consumable) | How long the customer has been a consumable buyer. Loyalty / cohort axis. |
 | **Average Monthly Consumption (AMC)** | `M6 / 6`                                            | Unit volume per month, smoothed over 6 mo.  |
 | **Average Order Size (AOS)**       | `M6 / O6` (NULL if `O6 = 0`)                           | Average units per consumable order, last 6 mo. |
+
+**Tenure Months convention.** The first purchase month counts as month 1. Worked examples for a report month-end of April 2026:
+
+| `first_consumable_purchase_date` | `tenure_months` |
+|----------------------------------|-----------------|
+| April 2026                       | 1               |
+| March 2026                       | 2               |
+| April 2025                       | 13              |
+| January 2024                     | 28              |
+| (never purchased a consumable)   | NULL            |
+
+Equivalent formula:
+
+```
+tenure_months = (YEAR(report_month_end) - YEAR(first_consumable_purchase_date)) * 12
+              + (MONTH(report_month_end) - MONTH(first_consumable_purchase_date))
+              + 1
+```
+
+NULL — not 0 — is used for customers with no consumable purchases, so that "first month of purchase" (`= 1`) and "never purchased" (`= NULL`) are unambiguously distinguishable.
 
 ---
 
@@ -102,16 +123,18 @@ The Value Tier is evaluated **top-down with first-match precedence** — once a 
 
 > **Tier names.** The names below (Diamond / Platinum / Gold / Silver / Bronze, plus Passive) are an initial proposal — they have a clear hierarchical reading. The thresholds on AMC and AOS are placeholders; final values will be calibrated against the synthetic dataset.
 
-| Order | Tier         | Rule                                            | Intent                                          |
-|-------|--------------|-------------------------------------------------|-------------------------------------------------|
-| 1     | **Passive**  | `M6 = 0`                                        | Active in 12-month window but **silent for 6+ months**. Override — applied before any volume tier. |
-| 2     | **Diamond**  | `AMC ≥ T_high` **AND** `AOS ≥ A_high`           | Top: high recurring volume **and** large baskets. |
-| 3     | **Platinum** | `AMC ≥ T_high`                                  | High recurring volume, smaller baskets.          |
-| 4     | **Gold**     | `AMC ≥ T_mid_high`                              | Solid recurring buyer.                           |
-| 5     | **Silver**   | `AMC ≥ T_mid`                                   | Moderate recurring buyer.                        |
-| 6     | **Bronze**   | `AMC > 0`                                       | Any recurring activity in the last 6 months.     |
+| Order | Tier         | Rule                                                                          | Intent                                          |
+|-------|--------------|-------------------------------------------------------------------------------|-------------------------------------------------|
+| 1     | **Passive**  | `M6 = 0`                                                                      | Active in 12-month window but **silent for 6+ months**. Override — applied before any volume tier. |
+| 2     | **Diamond**  | `AMC ≥ T_high` **AND** `AOS ≥ A_high` **AND** `O6 ≥ F_high`                   | Top: high recurring volume, large baskets **and** consistent order frequency. |
+| 3     | **Platinum** | `AMC ≥ T_high` **AND** `O6 ≥ F_mid`                                           | High recurring volume sustained across multiple orders. |
+| 4     | **Gold**     | `AMC ≥ T_mid_high`                                                            | Solid recurring buyer.                           |
+| 5     | **Silver**   | `AMC ≥ T_mid`                                                                 | Moderate recurring buyer.                        |
+| 6     | **Bronze**   | `AMC > 0`                                                                     | Any recurring activity in the last 6 months.     |
 
-Threshold variables (`T_high`, `T_mid_high`, `T_mid`, `A_high`) are defined in a separate calibration table once the synthetic data is in place.
+Threshold variables (`T_high`, `T_mid_high`, `T_mid`, `A_high`, `F_high`, `F_mid`) are defined in a separate calibration table once the synthetic data is in place.
+
+> **Why a frequency gate on the top two tiers?** Without `O6 ≥ F_*`, a customer who placed a single very large order in the last 6 months could land in Diamond/Platinum on volume alone. The frequency gate ensures that the top tiers reward **sustained engagement**, not one-off volume spikes — completing the RFMT picture (Diamond/Platinum exercise R, F and M; Gold/Silver/Bronze exercise M only and are differentiated purely by volume).
 
 > **Important.** Because rule 1 (Passive) supersedes everything else, the Diamond → Bronze hierarchy is meaningful only for customers with at least one consumable purchase in the last 6 calendar months.
 
@@ -178,7 +201,7 @@ For each customer × report month, the CRM layer emits:
 
 * **Identifiers**: `customer_id`, `report_month`
 * **Base aggregates**: `M_total`, `M1`, `M6`, `M12`, `M13`, `M24`, `M25`, `O6`
-* **Derived KPIs**: `first_device_purchase_date`, `first_consumable_purchase_date`, `last_consumable_purchase_date`, `avg_monthly_consumption`, `avg_order_size`
+* **Derived KPIs**: `first_device_purchase_date`, `first_consumable_purchase_date`, `last_consumable_purchase_date`, `tenure_months`, `avg_monthly_consumption`, `avg_order_size`
 * **Status fields**: `activity_status`, `value_tier`, `lifecycle_event`
 
 This is the canonical output that downstream reporting (Streamlit dashboard, exports) consumes.
