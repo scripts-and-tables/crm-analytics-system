@@ -3,45 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CRM Analytics — RFMT-based customer segmentation, in plain SQL</title>
-  <meta name="description" content="An end-to-end CRM analytics pipeline: synthetic data, RFMT segmentation, lifecycle events, and a static interactive dashboard. Plain SQL. Reproducible. Open source.">
+  <title>CRM Analytics — Know your customers. Grow your revenue.</title>
+  <meta name="description" content="Customer analytics that fits in your pocket. Spot VIPs, catch churn before it costs you, and turn raw transactions into revenue. Mobile-friendly, AI-ready, 100% open source.">
 
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/devicon.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="landing">
 
 <!-- ============================================================ Navbar -->
-<nav class="navbar navbar-expand-lg fixed-top bg-body-tertiary border-bottom border-secondary-subtle">
+<nav class="navbar navbar-expand-lg fixed-top">
   <div class="container">
-    <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="#">
-      <i class="bi bi-bar-chart-line-fill text-primary"></i>
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+      <span class="brand-mark"><i class="bi bi-bar-chart-line-fill"></i></span>
       <span>CRM&nbsp;Analytics</span>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="nav">
-      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+        <li class="nav-item"><a class="nav-link" href="#why">Why us</a></li>
         <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-        <li class="nav-item"><a class="nav-link" href="#pipeline">How it works</a></li>
-        <li class="nav-item"><a class="nav-link" href="#preview">Preview</a></li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Docs</a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="specs/crm_calculation_logic.html">Business logic</a></li>
-            <li><a class="dropdown-item" href="specs/source_files_specifications.html">Data spec</a></li>
-            <li><a class="dropdown-item" href="specs/project_requirements.html">Requirements</a></li>
-          </ul>
-        </li>
+        <li class="nav-item"><a class="nav-link" href="#use-cases">Use cases</a></li>
+        <li class="nav-item"><a class="nav-link" href="#stack">Stack</a></li>
+        <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
         <li class="nav-item">
           <a class="nav-link" href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">
-            <i class="bi bi-github"></i> GitHub
+            <i class="bi bi-github"></i>
           </a>
         </li>
         <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
-          <a class="btn btn-primary px-3" href="dashboard.html">Open dashboard <i class="bi bi-arrow-right"></i></a>
+          <a class="btn btn-primary px-3 fw-semibold" href="dashboard.html">
+            Try the demo <i class="bi bi-arrow-right ms-1"></i>
+          </a>
         </li>
       </ul>
     </div>
@@ -49,166 +48,359 @@
 </nav>
 
 <!-- ============================================================ Hero -->
-<header class="hero-section">
-  <div class="container">
+<header class="hero-v2">
+  <div class="container position-relative">
     <div class="row align-items-center g-5">
       <div class="col-lg-6">
-        <span class="badge rounded-pill text-bg-primary-subtle border border-primary-subtle text-primary-emphasis mb-3 px-3 py-2">
-          <i class="bi bi-stars me-1"></i> Synthetic-data showcase
+        <span class="eyebrow">
+          <i class="bi bi-stars"></i> CRM Analytics in your pocket
         </span>
-        <h1 class="display-4 fw-bold mb-3 lh-sm">
-          Turn raw transactions<br>into <span class="text-gradient">customer insights</span>.
+        <h1 class="hero-title">
+          Know every customer.<br>
+          Grow every <span class="text-gradient">revenue</span>.
         </h1>
-        <p class="lead text-secondary mb-4">
-          An end-to-end CRM analytics pipeline that segments your customer base by activity,
-          value tier and lifecycle event &mdash; using nothing but SQL, a SQLite file, and a
-          static dashboard. Fully reproducible. Open source.
+        <p class="hero-sub">
+          Turn raw transactions into a live customer scoreboard. Spot your VIPs,
+          catch churn before it costs you, and act on the right segment &mdash;
+          all from a dashboard that fits in your pocket.
         </p>
-        <div class="d-flex flex-wrap gap-2">
-          <a class="btn btn-primary btn-lg px-4" href="dashboard.html">
-            Open the dashboard <i class="bi bi-arrow-right ms-1"></i>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <a class="btn btn-primary btn-lg fw-semibold px-4" href="dashboard.html">
+            Try the live demo <i class="bi bi-arrow-right ms-1"></i>
           </a>
           <a class="btn btn-outline-light btn-lg px-4"
              href="https://github.com/scripts-and-tables/crm-analytics-system"
              target="_blank" rel="noopener">
-            <i class="bi bi-github me-1"></i> View on GitHub
+            <i class="bi bi-github me-1"></i> See the code
           </a>
         </div>
-        <div class="mt-4 small text-secondary">
-          <i class="bi bi-shield-check me-1 text-success"></i>
-          MIT licensed &middot; no install required &middot; runs entirely in your browser
-        </div>
+        <ul class="trust-list">
+          <li><i class="bi bi-check2-circle"></i> No signup</li>
+          <li><i class="bi bi-shield-check"></i> Runs on your data</li>
+          <li><i class="bi bi-stopwatch"></i> 5-minute setup</li>
+          <li><i class="bi bi-emoji-smile"></i> 100% open source</li>
+        </ul>
       </div>
 
       <div class="col-lg-6">
-        <div class="hero-preview shadow-lg">
-          <div class="hero-preview-bar">
-            <span></span><span></span><span></span>
+        <div class="hero-visual">
+          <div class="hero-window shadow-xl">
+            <div class="hero-window-bar">
+              <span class="dot dot-r"></span>
+              <span class="dot dot-y"></span>
+              <span class="dot dot-g"></span>
+              <span class="hero-window-url">crm-analytics / dashboard</span>
+            </div>
+            <img src="screenshots/tier_trend.png" alt="Customer value-tier mix tracked across 12 months">
           </div>
-          <img src="screenshots/tier_trend.png" class="img-fluid"
-               alt="Stacked bar chart showing the active customer mix by Value Tier across 12 months">
+          <div class="hero-mini-card hero-mini-1">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="dot-pulse"></span>
+              <span class="small text-secondary">Last 24h</span>
+            </div>
+            <div class="fw-bold fs-5">+12 New customers</div>
+            <div class="small text-success"><i class="bi bi-arrow-up"></i> 8.4% vs avg</div>
+          </div>
+          <div class="hero-mini-card hero-mini-2">
+            <div class="small text-secondary mb-1">Churn risk</div>
+            <div class="fw-bold fs-5">3 Diamond at risk</div>
+            <div class="small text-warning"><i class="bi bi-exclamation-triangle"></i> Action recommended</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Decorative background gradient -->
-  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="hero-mesh" aria-hidden="true"></div>
 </header>
 
-<!-- ============================================================ Stat strip -->
-<section class="bg-body-tertiary border-top border-bottom border-secondary-subtle py-4">
+<!-- ============================================================ Tech badge strip -->
+<section class="trust-strip py-4">
   <div class="container">
-    <div class="row text-center g-4">
-      <div class="col-6 col-md-3">
-        <div class="display-6 fw-bold text-primary">5,000</div>
-        <div class="text-secondary small text-uppercase">customers</div>
+    <p class="trust-strip-label">Built on a stack you already trust</p>
+    <div class="trust-strip-icons">
+      <span class="tech-badge"><i class="devicon-python-plain"></i> Python</span>
+      <span class="tech-badge"><i class="devicon-sqlite-plain"></i> SQLite</span>
+      <span class="tech-badge"><i class="devicon-bootstrap-plain"></i> Bootstrap 5</span>
+      <span class="tech-badge"><i class="devicon-plotly-plain"></i> Plotly</span>
+      <span class="tech-badge"><i class="bi bi-cpu"></i> AI-ready</span>
+      <span class="tech-badge"><i class="bi bi-phone"></i> Mobile-first</span>
+      <span class="tech-badge"><i class="bi bi-shield-lock"></i> Self-hosted</span>
+      <span class="tech-badge"><i class="bi bi-unlock"></i> MIT</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Why us — outcome blocks -->
+<section id="why" class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="badge-soft">Why CRM Analytics</span>
+      <h2 class="section-title">Move from data &raquo; <span class="text-gradient">decisions</span></h2>
+      <p class="section-sub">
+        Stop exporting CSVs. Stop building one-off pivot tables. Get a single living
+        snapshot of every customer &mdash; updated monthly, segmented automatically,
+        ready to act on.
+      </p>
+    </div>
+
+    <div class="row g-4 outcome-row">
+      <div class="col-md-4">
+        <div class="outcome-card">
+          <div class="outcome-icon outcome-icon-1"><i class="bi bi-trophy-fill"></i></div>
+          <h3 class="h5 fw-bold mb-2">Find your VIPs automatically</h3>
+          <p class="text-secondary mb-3">
+            A six-tier ladder &mdash; Diamond, Platinum, Gold, Silver, Bronze, Passive
+            &mdash; updates every month based on consumption, basket size and frequency.
+            Your sales team always knows where to focus.
+          </p>
+          <span class="outcome-link">See it in action <i class="bi bi-arrow-right"></i></span>
+        </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="display-6 fw-bold text-primary">138K</div>
-        <div class="text-secondary small text-uppercase">transactions</div>
+
+      <div class="col-md-4">
+        <div class="outcome-card">
+          <div class="outcome-icon outcome-icon-2"><i class="bi bi-heart-pulse-fill"></i></div>
+          <h3 class="h5 fw-bold mb-2">Catch churn before it costs you</h3>
+          <p class="text-secondary mb-3">
+            Lifecycle events flag every customer who just left or just came back.
+            Save the relationship before the next renewal &mdash; and celebrate the
+            wins when they return.
+          </p>
+          <span class="outcome-link">See lifecycle events <i class="bi bi-arrow-right"></i></span>
+        </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="display-6 fw-bold text-primary">12</div>
-        <div class="text-secondary small text-uppercase">monthly snapshots</div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="display-6 fw-bold text-primary">6</div>
-        <div class="text-secondary small text-uppercase">value tiers</div>
+
+      <div class="col-md-4">
+        <div class="outcome-card">
+          <div class="outcome-icon outcome-icon-3"><i class="bi bi-graph-up-arrow"></i></div>
+          <h3 class="h5 fw-bold mb-2">See what's working, monthly</h3>
+          <p class="text-secondary mb-3">
+            Watch your value-tier mix shift month over month. Did the new pricing
+            push more customers into Gold? Did the spring campaign reactivate
+            churned accounts? You'll know in seconds.
+          </p>
+          <span class="outcome-link">See trends <i class="bi bi-arrow-right"></i></span>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============================================================ Features -->
-<section id="features" class="py-5 py-lg-6">
+<!-- ============================================================ Features split #1 -->
+<section id="features" class="section section-tinted">
   <div class="container">
-    <div class="text-center mx-auto mb-5" style="max-width: 720px;">
-      <h2 class="display-6 fw-bold mb-3">Everything a CRM analyst needs, batteries included</h2>
-      <p class="lead text-secondary mb-0">
-        Three independent customer outputs &mdash; activity status, value tier, and lifecycle event &mdash;
-        derived from a transparent, well-documented set of rules.
+    <div class="row align-items-center g-5 split-row">
+      <div class="col-lg-6">
+        <span class="badge-soft mb-3">Features</span>
+        <h2 class="display-6 fw-bold mb-3">Always know <span class="text-gradient">who matters most</span></h2>
+        <p class="lead text-secondary">
+          The Value Tier ladder turns six months of purchases into a one-glance
+          picture of customer worth. Diamond customers get the white-glove
+          treatment. Bronze customers get the next-step nudge. Passive customers
+          get the win-back campaign.
+        </p>
+        <ul class="benefit-list">
+          <li><i class="bi bi-check-circle-fill"></i> Six-tier hierarchy with deterministic, explainable rules</li>
+          <li><i class="bi bi-check-circle-fill"></i> Recalibrated automatically as your customer base evolves</li>
+          <li><i class="bi bi-check-circle-fill"></i> Filterable, searchable, exportable to CSV in one click</li>
+        </ul>
+        <a class="btn btn-outline-primary mt-2" href="dashboard.html#tab-overview">
+          See tier mix &rarr;
+        </a>
+      </div>
+      <div class="col-lg-6">
+        <div class="split-image float-r">
+          <img src="screenshots/tier_mix.png" alt="Donut chart showing the active customer mix by Value Tier" class="img-fluid rounded-3 shadow-lg">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Features split #2 -->
+<section class="section">
+  <div class="container">
+    <div class="row align-items-center g-5 split-row flex-lg-row-reverse">
+      <div class="col-lg-6">
+        <span class="badge-soft mb-3">Lifecycle events</span>
+        <h2 class="display-6 fw-bold mb-3">Don't lose a customer to <span class="text-gradient">silence</span></h2>
+        <p class="lead text-secondary">
+          Every month, every customer gets one of three lifecycle flags &mdash;
+          New, Lost, or Reactivated &mdash; computed from cumulative purchase
+          windows. No machine-learning black box. No magic. Just rules a CFO
+          would sign off on.
+        </p>
+        <div class="row g-3 mt-2">
+          <div class="col-sm-4">
+            <div class="mini-stat">
+              <span class="mini-stat-pill bg-success-subtle text-success">New</span>
+              <div class="small text-secondary mt-2">First-ever consumable purchase this month</div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="mini-stat">
+              <span class="mini-stat-pill bg-danger-subtle text-danger">Lost</span>
+              <div class="small text-secondary mt-2">Last purchase fell out of the 12-month window</div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="mini-stat">
+              <span class="mini-stat-pill bg-info-subtle text-info">Reactivated</span>
+              <div class="small text-secondary mt-2">Came back after a long stretch of silence</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="split-image float-l">
+          <img src="screenshots/events_trend.png" alt="Line chart showing New, Reactivated and Lost events across 12 months" class="img-fluid rounded-3 shadow-lg">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Features split #3 -->
+<section class="section section-tinted">
+  <div class="container">
+    <div class="row align-items-center g-5 split-row">
+      <div class="col-lg-6">
+        <span class="badge-soft mb-3">Mobile-first</span>
+        <h2 class="display-6 fw-bold mb-3">Run the boardroom from a <span class="text-gradient">phone</span></h2>
+        <p class="lead text-secondary">
+          The whole dashboard ships as a single static page. Bootstrap 5 means
+          it works on a 4-inch iPhone, a 27-inch monitor, or anything in
+          between. No app store, no install &mdash; just a URL.
+        </p>
+        <ul class="benefit-list">
+          <li><i class="bi bi-check-circle-fill"></i> Responsive grid, sticky nav, hamburger menu on small screens</li>
+          <li><i class="bi bi-check-circle-fill"></i> Loads in under a second &mdash; data is pre-aggregated server-side</li>
+          <li><i class="bi bi-check-circle-fill"></i> Works offline once the page is open</li>
+        </ul>
+      </div>
+      <div class="col-lg-6">
+        <div class="phone-mockup">
+          <img src="screenshots/events_bar.png" alt="Lifecycle events on mobile">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Use cases -->
+<section id="use-cases" class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="badge-soft">Use cases</span>
+      <h2 class="section-title">Built for <span class="text-gradient">every team</span> that touches the customer</h2>
+      <p class="section-sub">
+        One snapshot, four perspectives. Each role gets the slice they need &mdash;
+        without waiting on the data team.
       </p>
     </div>
-
     <div class="row g-4">
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 feature-card">
-          <div class="card-body">
-            <div class="feature-icon"><i class="bi bi-diagram-3"></i></div>
-            <h3 class="h5 mb-2">RFMT segmentation</h3>
-            <p class="text-secondary mb-0">
-              Recency, Frequency, Monetary (volume) and Tenure all surfaced as first-class fields,
-              with a Diamond&nbsp;&rarr; Bronze tier ladder driven by AMC, AOS and order frequency.
-            </p>
-          </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="persona-card">
+          <div class="persona-icon"><i class="bi bi-megaphone-fill"></i></div>
+          <h3 class="h6 fw-bold mb-2">Marketing</h3>
+          <p class="small text-secondary mb-0">
+            Run campaigns against precise tier segments. Target Reactivated
+            customers with thank-you nudges. Target Passive customers with
+            win-back offers.
+          </p>
         </div>
       </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 feature-card">
-          <div class="card-body">
-            <div class="feature-icon"><i class="bi bi-arrow-repeat"></i></div>
-            <h3 class="h5 mb-2">Lifecycle events</h3>
-            <p class="text-secondary mb-0">
-              <span class="badge text-bg-success">New</span>,
-              <span class="badge text-bg-danger">Lost</span> and
-              <span class="badge text-bg-info">Reactivated</span> events derived from cumulative
-              M-fields with deterministic, mutually-exclusive rules.
-            </p>
-          </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="persona-card">
+          <div class="persona-icon"><i class="bi bi-telephone-fill"></i></div>
+          <h3 class="h6 fw-bold mb-2">Sales</h3>
+          <p class="small text-secondary mb-0">
+            Know who to call next. Diamond and Platinum customers always at
+            the top, with a fresh list every month based on real purchase
+            behaviour.
+          </p>
         </div>
       </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 feature-card">
-          <div class="card-body">
-            <div class="feature-icon"><i class="bi bi-database-check"></i></div>
-            <h3 class="h5 mb-2">SQL-first pipeline</h3>
-            <p class="text-secondary mb-0">
-              The whole calculation is one readable SQL script. No black-box framework,
-              no proprietary DSL &mdash; just SQLite and a few CTEs anyone can audit.
-            </p>
-          </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="persona-card">
+          <div class="persona-icon"><i class="bi bi-rocket-takeoff-fill"></i></div>
+          <h3 class="h6 fw-bold mb-2">Founders &amp; Ops</h3>
+          <p class="small text-secondary mb-0">
+            See the unfiltered customer story without scheduling a BI ticket.
+            One URL, every metric, every month.
+          </p>
         </div>
       </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 feature-card">
-          <div class="card-body">
-            <div class="feature-icon"><i class="bi bi-shuffle"></i></div>
-            <h3 class="h5 mb-2">Reproducible by design</h3>
-            <p class="text-secondary mb-0">
-              Persona-driven synthetic data with a fixed RNG seed. Every clone of the repo
-              produces the same numbers &mdash; reviewers can verify your work locally in a
-              single command.
-            </p>
-          </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="persona-card">
+          <div class="persona-icon"><i class="bi bi-database-fill-gear"></i></div>
+          <h3 class="h6 fw-bold mb-2">Data teams</h3>
+          <p class="small text-secondary mb-0">
+            A clean, AI-ready snapshot table you can extend. Plug in LLMs,
+            forecasting, or BI tools &mdash; all the heavy SQL is done.
+          </p>
         </div>
       </div>
+    </div>
+  </div>
+</section>
 
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 feature-card">
-          <div class="card-body">
-            <div class="feature-icon"><i class="bi bi-funnel"></i></div>
-            <h3 class="h5 mb-2">Filterable drill-down</h3>
-            <p class="text-secondary mb-0">
-              Slice by activity, tier, lifecycle event or customer group. Paginated table,
-              one-click CSV export of any filtered selection &mdash; all client-side.
-            </p>
-          </div>
-        </div>
+<!-- ============================================================ Stack & differentiators -->
+<section id="stack" class="section section-tinted">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-5">
+        <span class="badge-soft mb-3">Modern stack</span>
+        <h2 class="display-6 fw-bold mb-3">Modern, <span class="text-gradient">battle-tested</span> tech</h2>
+        <p class="lead text-secondary">
+          No proprietary lock-in. Every layer is open and well-known &mdash;
+          so any data analyst, engineer or AI agent can audit, extend,
+          or self-host the system in an afternoon.
+        </p>
       </div>
-
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 feature-card">
-          <div class="card-body">
-            <div class="feature-icon"><i class="bi bi-cloud-arrow-up"></i></div>
-            <h3 class="h5 mb-2">Deploys as static HTML</h3>
-            <p class="text-secondary mb-0">
-              No server, no database connection, no API. The whole dashboard ships as a
-              JSON snapshot served from GitHub Pages &mdash; click a link, it's live.
-            </p>
+      <div class="col-lg-7">
+        <div class="stack-grid">
+          <div class="stack-tile">
+            <i class="devicon-python-plain text-warning"></i>
+            <div>
+              <div class="fw-semibold">Python</div>
+              <div class="small text-secondary">Generation, build, exports</div>
+            </div>
+          </div>
+          <div class="stack-tile">
+            <i class="devicon-sqlite-plain text-info"></i>
+            <div>
+              <div class="fw-semibold">SQLite</div>
+              <div class="small text-secondary">Single-file analytical store</div>
+            </div>
+          </div>
+          <div class="stack-tile">
+            <i class="devicon-plotly-plain text-primary"></i>
+            <div>
+              <div class="fw-semibold">Plotly.js</div>
+              <div class="small text-secondary">Interactive charts</div>
+            </div>
+          </div>
+          <div class="stack-tile">
+            <i class="devicon-bootstrap-plain text-purple"></i>
+            <div>
+              <div class="fw-semibold">Bootstrap 5</div>
+              <div class="small text-secondary">Mobile-first UI</div>
+            </div>
+          </div>
+          <div class="stack-tile">
+            <i class="bi bi-cpu text-success"></i>
+            <div>
+              <div class="fw-semibold">AI-ready</div>
+              <div class="small text-secondary">Schema designed for LLM &amp; ML workflows</div>
+            </div>
+          </div>
+          <div class="stack-tile">
+            <i class="bi bi-shield-lock-fill text-danger"></i>
+            <div>
+              <div class="fw-semibold">Self-hosted</div>
+              <div class="small text-secondary">Data never leaves your machine</div>
+            </div>
           </div>
         </div>
       </div>
@@ -216,176 +408,347 @@
   </div>
 </section>
 
-<!-- ============================================================ Pipeline / How it works -->
-<section id="pipeline" class="bg-body-tertiary border-top border-bottom border-secondary-subtle py-5 py-lg-6">
+<!-- ============================================================ How it works -->
+<section class="section">
   <div class="container">
-    <div class="text-center mx-auto mb-5" style="max-width: 720px;">
-      <h2 class="display-6 fw-bold mb-3">From CSVs to a live dashboard, four steps</h2>
-      <p class="lead text-secondary mb-0">
-        Each step is a single command. Re-run end-to-end in under 30 seconds.
-      </p>
+    <div class="section-head">
+      <span class="badge-soft">How it works</span>
+      <h2 class="section-title">From CSVs to a live dashboard, <span class="text-gradient">three commands</span></h2>
+      <p class="section-sub">No setup wizards. No accounts. No SaaS bills.</p>
     </div>
-
     <div class="row g-4 align-items-stretch">
-      <div class="col-md-6 col-lg-3">
-        <div class="step-card h-100">
-          <div class="step-num">1</div>
-          <i class="bi bi-people-fill step-icon"></i>
-          <h3 class="h6 fw-semibold">Generate</h3>
-          <p class="small text-secondary mb-0">
-            Persona-driven synthetic CSVs &mdash; customers, products, transactions.
-            5,000 customers across 10 personas covering every CRM segment.
+      <div class="col-md-4">
+        <div class="step-tile h-100">
+          <div class="step-num-lg">01</div>
+          <h3 class="h5 fw-bold mb-2">Drop in your data</h3>
+          <p class="text-secondary mb-3">
+            Three CSVs &mdash; customers, products, transactions &mdash; or use the
+            built-in synthetic generator to test the pipeline end-to-end.
           </p>
-          <code class="d-block mt-3 small text-info">python scripts/generate_data/generate.py</code>
+          <code>python scripts/generate_data/generate.py</code>
         </div>
       </div>
-
-      <div class="col-md-6 col-lg-3">
-        <div class="step-card h-100">
-          <div class="step-num">2</div>
-          <i class="bi bi-database-fill step-icon"></i>
-          <h3 class="h6 fw-semibold">Build</h3>
-          <p class="small text-secondary mb-0">
-            Apply the schema, load the CSVs, run the calculation SQL once per report month
-            for the last 12 months and accumulate the snapshots.
+      <div class="col-md-4">
+        <div class="step-tile h-100">
+          <div class="step-num-lg">02</div>
+          <h3 class="h5 fw-bold mb-2">Run the calculation</h3>
+          <p class="text-secondary mb-3">
+            One command builds the SQLite database, runs the segmentation SQL
+            for the last 12 months, and writes the customer snapshot.
           </p>
-          <code class="d-block mt-3 small text-info">python db/build.py</code>
+          <code>python db/build.py</code>
         </div>
       </div>
-
-      <div class="col-md-6 col-lg-3">
-        <div class="step-card h-100">
-          <div class="step-num">3</div>
-          <i class="bi bi-file-earmark-code-fill step-icon"></i>
-          <h3 class="h6 fw-semibold">Export</h3>
-          <p class="small text-secondary mb-0">
-            Aggregate the snapshot into a small JSON payload, pre-render PNG previews and
-            convert each markdown spec to HTML.
+      <div class="col-md-4">
+        <div class="step-tile h-100">
+          <div class="step-num-lg">03</div>
+          <h3 class="h5 fw-bold mb-2">Open the dashboard</h3>
+          <p class="text-secondary mb-3">
+            Generate the static site and host it anywhere &mdash; GitHub Pages,
+            S3, your laptop. Zero servers, zero subscriptions.
           </p>
-          <code class="d-block mt-3 small text-info">python scripts/build_report.py</code>
-        </div>
-      </div>
-
-      <div class="col-md-6 col-lg-3">
-        <div class="step-card h-100">
-          <div class="step-num">4</div>
-          <i class="bi bi-eye-fill step-icon"></i>
-          <h3 class="h6 fw-semibold">Explore</h3>
-          <p class="small text-secondary mb-0">
-            Open the dashboard. Switch report months, filter customers, drill down,
-            export a CSV &mdash; all without a server.
-          </p>
-          <a href="dashboard.html" class="btn btn-sm btn-outline-primary mt-3">
-            Open the dashboard <i class="bi bi-arrow-right ms-1"></i>
-          </a>
+          <code>python scripts/build_report.py</code>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============================================================ Preview -->
-<section id="preview" class="py-5 py-lg-6">
+<!-- ============================================================ Comparison -->
+<section class="section section-tinted">
   <div class="container">
-    <div class="text-center mx-auto mb-5" style="max-width: 720px;">
-      <h2 class="display-6 fw-bold mb-3">A look inside</h2>
-      <p class="lead text-secondary mb-0">
-        Four built-in views &mdash; click <em>Open dashboard</em> to interact with the live data.
-      </p>
+    <div class="section-head">
+      <span class="badge-soft">Why not Excel?</span>
+      <h2 class="section-title">A serious upgrade from <span class="text-gradient">"that monthly spreadsheet"</span></h2>
     </div>
+    <div class="table-responsive">
+      <table class="table compare-table align-middle">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="text-center">Excel pivot tables</th>
+            <th class="text-center">Heavy BI tool</th>
+            <th class="text-center bg-primary-subtle text-primary-emphasis fw-semibold">CRM Analytics</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Time to first dashboard</td>
+            <td class="text-center"><span class="text-warning">days</span></td>
+            <td class="text-center"><span class="text-warning">weeks</span></td>
+            <td class="text-center"><span class="text-success fw-semibold"><i class="bi bi-check2-circle"></i> 5 minutes</span></td>
+          </tr>
+          <tr>
+            <td>Auditable segmentation rules</td>
+            <td class="text-center"><i class="bi bi-x-lg text-danger"></i></td>
+            <td class="text-center text-warning">partial</td>
+            <td class="text-center text-success"><i class="bi bi-check2-circle"></i></td>
+          </tr>
+          <tr>
+            <td>Mobile dashboards</td>
+            <td class="text-center"><i class="bi bi-x-lg text-danger"></i></td>
+            <td class="text-center text-warning">paid add-on</td>
+            <td class="text-center text-success"><i class="bi bi-check2-circle"></i></td>
+          </tr>
+          <tr>
+            <td>Your data leaves your machine</td>
+            <td class="text-center text-warning">sometimes</td>
+            <td class="text-center text-warning">always</td>
+            <td class="text-center text-success fw-semibold"><i class="bi bi-shield-check"></i> never</td>
+          </tr>
+          <tr>
+            <td>Monthly cost</td>
+            <td class="text-center text-success">$0</td>
+            <td class="text-center text-danger">$$$</td>
+            <td class="text-center text-success fw-semibold">$0 forever</td>
+          </tr>
+          <tr>
+            <td>AI / LLM extensibility</td>
+            <td class="text-center"><i class="bi bi-x-lg text-danger"></i></td>
+            <td class="text-center text-warning">vendor-locked</td>
+            <td class="text-center text-success"><i class="bi bi-check2-circle"></i> open schema</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
-    <div class="row g-4">
-      <div class="col-lg-6">
-        <figure class="preview-card">
-          <img src="screenshots/tier_mix.png" class="img-fluid" alt="Donut chart of value tier mix">
-          <figcaption>
-            <strong>Tier mix</strong>
-            <span class="text-secondary">&middot; current-month split of active customers across the value-tier ladder.</span>
-          </figcaption>
-        </figure>
-      </div>
-      <div class="col-lg-6">
-        <figure class="preview-card">
-          <img src="screenshots/events_bar.png" class="img-fluid" alt="Bar chart of lifecycle events">
-          <figcaption>
-            <strong>Lifecycle events</strong>
-            <span class="text-secondary">&middot; New / Reactivated / Lost counts in the report month.</span>
-          </figcaption>
-        </figure>
-      </div>
-      <div class="col-lg-6">
-        <figure class="preview-card">
-          <img src="screenshots/tier_trend.png" class="img-fluid" alt="Stacked bar chart of tier mix over months">
-          <figcaption>
-            <strong>Tier trend</strong>
-            <span class="text-secondary">&middot; how the active base shifts between tiers month over month.</span>
-          </figcaption>
-        </figure>
-      </div>
-      <div class="col-lg-6">
-        <figure class="preview-card">
-          <img src="screenshots/events_trend.png" class="img-fluid" alt="Line chart of lifecycle events over months">
-          <figcaption>
-            <strong>Lifecycle trends</strong>
-            <span class="text-secondary">&middot; New, Reactivated and Lost cohorts tracked across 12 months.</span>
-          </figcaption>
-        </figure>
+<!-- ============================================================ FAQ -->
+<section id="faq" class="section">
+  <div class="container">
+    <div class="section-head">
+      <span class="badge-soft">FAQ</span>
+      <h2 class="section-title">Common <span class="text-gradient">questions</span></h2>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div class="accordion accordion-flush" id="faqAcc">
+          <div class="accordion-item">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                Is my customer data secure?
+              </button>
+            </h3>
+            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+              <div class="accordion-body text-secondary">
+                Yes &mdash; the entire pipeline runs locally on your machine.
+                No data is uploaded anywhere. The dashboard is a static page
+                that you can host on infrastructure you already control
+                (GitHub Pages, S3, an internal server, or even just open
+                the file from your filesystem).
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                How long does it take to set up?
+              </button>
+            </h3>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+              <div class="accordion-body text-secondary">
+                Five minutes. Three commands. The repo includes a synthetic
+                data generator so you can see the dashboard fully populated
+                before plugging in your real CSVs.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                Can I customise the segments and thresholds?
+              </button>
+            </h3>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+              <div class="accordion-body text-secondary">
+                Absolutely. The whole calculation lives in one readable SQL
+                file. Open it, change a threshold, re-run the build. The
+                business-logic spec is also in the repo &mdash; rules first,
+                code second.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                Does it work on mobile?
+              </button>
+            </h3>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+              <div class="accordion-body text-secondary">
+                Fully responsive. Built on Bootstrap 5 with a mobile-first
+                grid &mdash; navbar collapses, charts resize, tables scroll
+                horizontally where needed. Your sales team can review tier
+                changes between meetings.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                Is this AI-powered?
+              </button>
+            </h3>
+            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+              <div class="accordion-body text-secondary">
+                The core segmentation is rule-based by design &mdash; explainable,
+                auditable, no black boxes. The output schema is intentionally
+                AI-ready: clean rows, named features, monthly snapshots.
+                Plug in an LLM for natural-language summaries or a forecasting
+                model for churn prediction whenever you're ready.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                Can I integrate it with our existing tools?
+              </button>
+            </h3>
+            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+              <div class="accordion-body text-secondary">
+                Yes. Export any filtered customer list as CSV, query the
+                SQLite file directly from any language, or hit the JSON
+                snapshot the dashboard reads. Hooking it into Salesforce,
+                HubSpot, Slack, or a marketing automation tool is a few
+                lines of code.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                What does it cost?
+              </button>
+            </h3>
+            <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
+              <div class="accordion-body text-secondary">
+                Nothing. MIT licensed, free to use commercially, free to
+                modify, free to redistribute. Forever.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================ Final CTA -->
-<section class="py-5 py-lg-6 cta-section">
+<section class="section cta-section-v2">
   <div class="container text-center">
-    <h2 class="display-6 fw-bold mb-3">Ready to dig in?</h2>
+    <span class="eyebrow mb-3">
+      <i class="bi bi-stars"></i> Ready when you are
+    </span>
+    <h2 class="display-5 fw-bold mb-3">
+      See your customers like you've <span class="text-gradient">never seen them before</span>
+    </h2>
     <p class="lead text-secondary mb-4 mx-auto" style="max-width: 640px;">
-      Open the live dashboard, browse the source on GitHub, or read the business logic that drives every KPI.
+      Open the live dashboard now &mdash; no signup, no install, no email required.
+      Just click and explore.
     </p>
     <div class="d-flex flex-wrap justify-content-center gap-2">
-      <a class="btn btn-primary btn-lg px-4" href="dashboard.html">
-        Open the dashboard <i class="bi bi-arrow-right ms-1"></i>
+      <a class="btn btn-primary btn-lg fw-semibold px-5" href="dashboard.html">
+        Try the live demo <i class="bi bi-arrow-right ms-1"></i>
       </a>
-      <a class="btn btn-outline-light btn-lg px-4"
-         href="specs/crm_calculation_logic.html">
-        <i class="bi bi-book me-1"></i> Read the docs
-      </a>
-      <a class="btn btn-outline-light btn-lg px-4"
+      <a class="btn btn-outline-light btn-lg px-5"
          href="https://github.com/scripts-and-tables/crm-analytics-system"
          target="_blank" rel="noopener">
-        <i class="bi bi-github me-1"></i> Star on GitHub
+        <i class="bi bi-github me-1"></i> View on GitHub
       </a>
+    </div>
+    <div class="mt-4 small text-secondary">
+      <i class="bi bi-stars text-primary"></i>
+      Star us on GitHub if you find it useful.
     </div>
   </div>
 </section>
 
 <!-- ============================================================ Footer -->
-<footer class="border-top border-secondary-subtle py-4 small text-secondary">
+<footer class="footer-v2 py-5">
   <div class="container">
-    <div class="row align-items-center g-3">
-      <div class="col-md-6">
-        <div class="d-flex align-items-center gap-2">
-          <i class="bi bi-bar-chart-line-fill text-primary"></i>
-          <span class="fw-semibold text-light">CRM Analytics</span>
-          <span class="text-secondary">&middot; MIT licensed</span>
-        </div>
-        <div class="mt-2">
-          Built with <a href="https://plotly.com/javascript/" target="_blank" rel="noopener">Plotly.js</a>,
-          <a href="https://getbootstrap.com" target="_blank" rel="noopener">Bootstrap</a> and SQLite.
-          All data is synthetic.
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2 mb-3" href="#">
+          <span class="brand-mark"><i class="bi bi-bar-chart-line-fill"></i></span>
+          <span>CRM&nbsp;Analytics</span>
+        </a>
+        <p class="small text-secondary mb-3">
+          Customer analytics that fits in your pocket. RFMT segmentation,
+          lifecycle events and a mobile-friendly dashboard &mdash; without
+          the SaaS bill.
+        </p>
+        <div class="small text-secondary">
+          <i class="bi bi-emoji-heart-eyes me-1"></i>
+          MIT licensed &middot; built with care.
         </div>
       </div>
-      <div class="col-md-6 text-md-end">
-        <a class="text-secondary me-3" href="specs/crm_calculation_logic.html">Business logic</a>
-        <a class="text-secondary me-3" href="specs/source_files_specifications.html">Data spec</a>
-        <a class="text-secondary" href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">
-          <i class="bi bi-github"></i> GitHub
+
+      <div class="col-6 col-md-3 col-lg-2">
+        <h6 class="footer-heading">Product</h6>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="#features">Features</a>
+        <a href="#use-cases">Use cases</a>
+        <a href="#stack">Tech stack</a>
+        <a href="#faq">FAQ</a>
+      </div>
+
+      <div class="col-6 col-md-3 col-lg-2">
+        <h6 class="footer-heading">Docs</h6>
+        <a href="specs/crm_calculation_logic.html">Business logic</a>
+        <a href="specs/source_files_specifications.html">Data spec</a>
+        <a href="specs/project_requirements.html">Requirements</a>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <h6 class="footer-heading">Source &amp; community</h6>
+        <a href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">
+          <i class="bi bi-github me-2"></i> GitHub repository
+        </a>
+        <a href="https://github.com/scripts-and-tables/crm-analytics-system/issues" target="_blank" rel="noopener">
+          <i class="bi bi-bug me-2"></i> Report an issue
+        </a>
+        <a href="https://github.com/scripts-and-tables/crm-analytics-system/blob/main/LICENSE" target="_blank" rel="noopener">
+          <i class="bi bi-file-earmark-text me-2"></i> MIT License
         </a>
       </div>
+    </div>
+    <hr class="border-secondary-subtle my-4">
+    <div class="d-flex flex-wrap justify-content-between gap-2 small text-secondary">
+      <div>&copy; <span id="year"></span> CRM Analytics &middot; A reference implementation</div>
+      <div>Built with Bootstrap 5, Plotly.js, SQLite and a lot of care.</div>
     </div>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // Soft fade-in on scroll for sections / cards.
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add("in-view");
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".section, .outcome-card, .persona-card, .stack-tile, .step-tile, .split-row, .compare-table, .accordion-item")
+          .forEach(el => { el.classList.add("reveal"); io.observe(el); });
+
+  // Smooth scroll for in-page anchors.
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener("click", e => {
+      const id = a.getAttribute("href");
+      if (id.length <= 1) return;
+      const t = document.querySelector(id);
+      if (!t) return;
+      e.preventDefault();
+      window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - 70, behavior: "smooth" });
+    });
+  });
+</script>
 </body>
 </html>
