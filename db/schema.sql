@@ -15,12 +15,12 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS raw_sales_transactions (
     txn_id       INTEGER PRIMARY KEY AUTOINCREMENT,
     invoice_id   TEXT NOT NULL,
-    customer_id  INT NOT NULL,
-    invoice_date INT NOT NULL,          -- ISO: YYYY-MM-DD
-    product_id   INT NOT NULL,
-    quantity     REAL NOT NULL,
-    revenue      REAL NOT NULL,
-    store_id     INT NOT NULL,
+    customer_id  INTEGER NOT NULL,
+    invoice_date TEXT NOT NULL,          -- ISO: YYYY-MM-DD
+    product_id   INTEGER NOT NULL,
+    quantity     REAL NOT NULL,          -- negative quantity = return; excluded from CRM aggregates
+    revenue      REAL NOT NULL,          -- net revenue per invoice line; not used by CRM (volume is in `units`)
+    store_id     INTEGER,                -- nullable; some transactions may not be tied to a store
 
     CHECK (invoice_date GLOB '????-??-??')
 );
@@ -74,8 +74,11 @@ CREATE TABLE IF NOT EXISTS raw_products (
     product_id   INTEGER PRIMARY KEY NOT NULL,
     product_name TEXT NOT NULL,
     brand        TEXT NOT NULL,
-    category     TEXT NOT NULL,
-    grammage_g   REAL
+    category     TEXT NOT NULL,           -- one of: device, consumable, accessories, spare_parts
+    unit_size    REAL,                    -- volume / pack size per unit; required for consumables, NULL allowed for non-consumable categories
+
+    CHECK (category IN ('device', 'consumable', 'accessories', 'spare_parts')),
+    CHECK (category <> 'consumable' OR unit_size IS NOT NULL)
 );
 
 CREATE INDEX IF NOT EXISTS ix_raw_products_category

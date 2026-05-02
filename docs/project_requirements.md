@@ -27,13 +27,13 @@ To enable this, the system must:
 
    * Data is transformed and calculated automatically as soon as the most updated input data is received
 
-4. **Self-service Power BI reporting**:
+4. **Self-service Streamlit dashboard**:
 
-   * Power BI reports are updated and available so Marketing and Sales can:
+   * A Streamlit + Plotly application is updated and available so Marketing and Sales can:
 
-     * Filter customers by key attributes (e.g., month, segment/category/status, opt-in flags)
+     * Filter customers by key attributes (e.g., month, value tier / activity status / lifecycle event, opt-in flags)
      * Extract/export lists for actioning
-     * Review aggregated summaries (e.g., totals by segment/category)
+     * Review aggregated summaries (e.g., customer counts by value tier or lifecycle event)
 
 ---
 
@@ -46,7 +46,7 @@ To enable this, the system must:
 * The system must support **filtered extraction** for business and analytical use cases, including:
 
   * Month selection
-  * Segment/category/status (as defined in the CRM logic)
+  * Activity status, value tier, and lifecycle event (as defined in the CRM logic)
   * Opt-in flags (email/SMS/phone)
   * Customer group / city / store (where applicable)
 * The system must support exporting the extracted results in common formats (CSV/Excel).
@@ -56,10 +56,10 @@ To enable this, the system must:
 * The system must refresh calculations automatically upon receipt of updated data (batch refresh workflow).
 * The system must provide basic data quality controls (e.g., missing customer_id/product_id, invalid dates) and logging.
 
-### Frontend / Reporting (Power BI)
+### Frontend / Reporting (Streamlit + Plotly)
 
 * The reporting layer must provide:
 
-  * Customer list view with filters and export
-  * Aggregated summaries (customer counts by segment/category) with time context
-* The latest month should be easy to access (default view), while historical navigation can be enabled as required.
+  * Customer list view with filters and CSV export
+  * Aggregated summaries (customer counts by value tier / lifecycle event) with time context
+* The latest report month should be the default view, with historical navigation available via a month selector.

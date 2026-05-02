@@ -26,7 +26,7 @@ One file per year.
 
 ### What it represents
 
-Transactional sales records at **invoice level** (one row per invoice). This file family is the primary behavioral source used to derive refill behavior, consumption, revenue, and event logic.
+Transactional sales records at **invoice-line level** (one row per `invoice_id` × `product_id`). This file family is the primary behavioral source used to derive consumable behavior, consumption, lifecycle, and event logic.
 
 ### Grain
 
@@ -40,8 +40,8 @@ Transactional sales records at **invoice level** (one row per invoice). This fil
 | `customer_id`  | Customer identifier         | Text / Integer     | **Foreign key** → Customers master (`customer_id`)                    |
 | `invoice_date` | Invoice date                | `YYYY-MM-DD` (ISO) | Date only (no time)                                                   |
 | `product_id`   | Product identifier          | Text / Integer     | **Foreign key** → Products master (`product_id`)                      |
-| `quantity`     | Quantity sold               | Numeric            | Sign convention to be defined (e.g., returns)                         |
-| `revenue`      | Net amount (revenue)        | Numeric            | Net revenue amount per invoice                                        |
+| `quantity`     | Quantity sold               | Numeric            | Negative values represent returns and are excluded from CRM aggregates (see `crm_calculation_logic.md` §6.3). |
+| `revenue`      | Net amount (revenue)        | Numeric            | Net revenue amount per invoice line. Retained but not used by CRM logic; CRM measures volume in `units`. |
 | `store_id`     | Store identifier            | Text / Integer     | Optional, but retained                                                |
 
 **Notes**
@@ -89,7 +89,7 @@ Customer reference data (stable attributes used for segmentation, contactability
 
 ### What it represents
 
-Product reference data required to classify transactions (e.g., refill vs non-refill via category rules) and compute consumption.
+Product reference data required to classify transactions (e.g., consumable vs non-consumable via category rules) and compute consumption.
 
 ### Grain
 
@@ -97,13 +97,13 @@ Product reference data required to classify transactions (e.g., refill vs non-re
 
 ### Columns
 
-| Column         | Description               | Format / Type | Notes                                             |
-| -------------- | ------------------------- | ------------- | ------------------------------------------------- |
-| `product_id`   | Product identifier        | Integer       | **Primary key**                                   |
-| `product_name` | Product name              | Text          |                                                   |
-| `brand`        | Brand                     | Text          |                                                   |
-| `category`     | Category                  | Text          | Options: device, refill, spare parts, accessories |
-| `grammage_g`   | Grammage per unit (grams) | Numeric       | Required for consumption calculations             |
+| Column         | Description                          | Format / Type | Notes                                                                                       |
+| -------------- | ------------------------------------ | ------------- | ------------------------------------------------------------------------------------------- |
+| `product_id`   | Product identifier                   | Integer       | **Primary key**                                                                             |
+| `product_name` | Product name                         | Text          |                                                                                             |
+| `brand`        | Brand                                | Text          |                                                                                             |
+| `category`     | Product category                     | Text          | Allowed values: `device`, `consumable`, `accessories`, `spare_parts`. CRM logic operates on `consumable`; `device` is used only for the First Device Purchase Date KPI. |
+| `unit_size`    | Volume / pack size per unit (units)  | Numeric       | Used to translate `quantity` into the `units` measure consumed by all CRM aggregates. Required for all `consumable` rows. |
 
 ---
 

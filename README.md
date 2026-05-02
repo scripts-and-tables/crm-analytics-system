@@ -16,7 +16,7 @@ This repository covers:
 
 * ingestion and structuring of raw CRM data
 * implementation of CRM analytics logic
-* generation of analytics-ready outputs for reporting tools (Excel / Power BI)
+* generation of analytics-ready outputs for a Streamlit + Plotly dashboard and CSV / Excel exports
 
 Detailed business rules, thresholds, and segmentation logic are intentionally documented **outside of this README** and maintained in a dedicated business logic document.
 
@@ -32,7 +32,7 @@ The system operates on three core datasets:
 
 Raw data is stored in its original structure and transformed through controlled analytics layers.
 
-Input files data model: `/docs/source_files_specification.md`.
+Input files data model: `/docs/source_files_specifications.md`.
 
 ---
 
@@ -53,14 +53,14 @@ Project requirements: `/docs/project_requirements.md`.
 
 ## Core Analytics Concepts (Summary)
 
-* **Core vs non-core products**
-  Customer engagement is measured using recurring consumable products. One-off device or accessory purchases are excluded from engagement metrics.
+* **Consumables drive CRM**
+  Customer engagement is measured using recurring **consumable** products. Device, accessory, and spare-part purchases are excluded from engagement metrics. The only device-based KPI is the First Device Purchase Date.
 
-* **Customer lifecycle segmentation**
-  Customers are classified into lifecycle states (e.g. new, active, lost) based on purchase behavior over time.
+* **Three independent customer outputs per month**
+  Each customer is assigned an **Activity Status** (Active / Not Active), a **Value Tier** (Passive override, then Diamond / Platinum / Gold / Silver / Bronze) and an optional **Monthly Lifecycle Event** (New / Lost / Reactivated).
 
-* **RFMT-based value segmentation**
-  Active customers are further segmented using Recency, Frequency, Monetary, and Tenure features.
+* **RFMT-based value tiering**
+  Diamond and Platinum exercise Recency, Frequency and Monetary (volume) jointly via thresholds on AMC (Average Monthly Consumption), AOS (Average Order Size) and O6 (orders in last 6 months). Tenure is captured as `tenure_months` for cohort and loyalty analysis.
 
 Calculation / Segmentation full details: `/docs/crm_calculation_logic.md`.
 
@@ -80,10 +80,10 @@ More about RFM on [Wikipedia](https://en.wikipedia.org/wiki/RFM_(market_research
 
 The system produces:
 
-* customer-level CRM analytics tables
-* lifecycle status indicators
-* RFMT features and segments
-* analytics-ready views for Excel and Power BI
+* a customer × report-month CRM snapshot table (activity status, value tier, lifecycle event, RFMT features)
+* derived per-customer KPIs (`tenure_months`, AMC, AOS, first/last consumable purchase dates, first device purchase date)
+* a Streamlit + Plotly dashboard for slicing and exporting the snapshot
+* CSV / Excel exports for ad-hoc business use
 
 Outputs are designed to support both operational reporting and strategic CRM analysis.
 
@@ -91,12 +91,12 @@ Outputs are designed to support both operational reporting and strategic CRM ana
 
 ## How to Run (High Level)
 
-1. Load raw customer, product, and transaction data.
-2. Execute the analytics pipeline to generate CRM outputs.
-3. Refresh analytics when new transactions are available.
-4. Consume results in reporting tools.
+1. Generate or place the raw customer, product, and transaction CSVs in `data/input/`.
+2. Build the SQLite database from `db/schema.sql` and load the CSVs.
+3. Run `db/run_crm_calculation.sql` to materialize the CRM snapshot table.
+4. Launch the Streamlit dashboard to explore segments, lifecycle events, and KPIs.
 
-Exact execution details can be adapted to different environments and are intentionally kept lightweight.
+A one-shot helper script will be added once the data generator and dashboard are in place.
 
 ---
 
