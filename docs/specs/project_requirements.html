@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRM Project — System Requirements (Simplified) — CRM Analytics Showcase</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="docs-page">
+<header class="docs-header">
+  <a href="../index.html" class="back-link">&larr; Back to dashboard</a>
+  <h1>CRM Project — System Requirements (Simplified)</h1>
+</header>
+<main class="docs-body">
+<h1 id="crm-project-system-requirements-simplified">CRM Project — System Requirements (Simplified)</h1>
+<h2 id="introduction">Introduction</h2>
+<p>We have access to three core datasets: <strong>Sales Transactions</strong>, <strong>Customers Master</strong>, and <strong>Products (Items) Master</strong>. The business teams—primarily <strong>Marketing</strong> and <strong>Sales</strong>, supported by the <strong>Data team</strong> (and relevant suppliers/partners where applicable)—want to generate deeper customer insights and apply established marketing practices (segmentation, lifecycle monitoring, and targeted customer lists).</p>
+<p>To enable this, the system must:</p>
+<ul>
+<li>Transform and aggregate the raw inputs into consistent, validated, and analytics-ready datasets</li>
+<li>Store the curated results in a backend database for reliable access</li>
+<li>Expose the information via self-service reporting so business teams can filter and extract relevant customer data</li>
+</ul>
+<hr />
+<h2 id="expected-results">Expected Results</h2>
+<ol>
+<li>
+<p><strong>Clean curated data in a database</strong> available for:</p>
+</li>
+<li>
+<p>Ad-hoc analysis</p>
+</li>
+<li>
+<p>Targeted extraction requests using filters (even if some filters are not exposed in the UI)</p>
+</li>
+<li>
+<p><strong>Standard Excel output(s)</strong>:</p>
+</li>
+<li>
+<p>A summary report that can be exported/submitted as needed</p>
+</li>
+<li>
+<p><strong>Automatic transformation and calculation</strong>:</p>
+</li>
+<li>
+<p>Data is transformed and calculated automatically as soon as the most updated input data is received</p>
+</li>
+<li>
+<p><strong>Self-service Streamlit dashboard</strong>:</p>
+</li>
+<li>
+<p>A Streamlit + Plotly application is updated and available so Marketing and Sales can:</p>
+<ul>
+<li>Filter customers by key attributes (e.g., month, value tier / activity status / lifecycle event, opt-in flags)</li>
+<li>Extract/export lists for actioning</li>
+<li>Review aggregated summaries (e.g., customer counts by value tier or lifecycle event)</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h2 id="high-level-system-requirements">High-Level System Requirements</h2>
+<h3 id="backend-data-storage">Backend (Data &amp; Storage)</h3>
+<ul>
+<li>The system must ingest the agreed input files (Sales Transactions yearly files, Customers Master, Products Master).</li>
+<li>The system must store a <strong>monthly CRM snapshot for every customer</strong> (historical months remain available for analysis).</li>
+<li>
+<p>The system must support <strong>filtered extraction</strong> for business and analytical use cases, including:</p>
+</li>
+<li>
+<p>Month selection</p>
+</li>
+<li>Activity status, value tier, and lifecycle event (as defined in the CRM logic)</li>
+<li>Opt-in flags (email/SMS/phone)</li>
+<li>Customer group / city / store (where applicable)</li>
+<li>The system must support exporting the extracted results in common formats (CSV/Excel).</li>
+</ul>
+<h3 id="automation">Automation</h3>
+<ul>
+<li>The system must refresh calculations automatically upon receipt of updated data (batch refresh workflow).</li>
+<li>The system must provide basic data quality controls (e.g., missing customer_id/product_id, invalid dates) and logging.</li>
+</ul>
+<h3 id="frontend-reporting-streamlit-plotly">Frontend / Reporting (Streamlit + Plotly)</h3>
+<ul>
+<li>
+<p>The reporting layer must provide:</p>
+</li>
+<li>
+<p>Customer list view with filters and CSV export</p>
+</li>
+<li>Aggregated summaries (customer counts by value tier / lifecycle event) with time context</li>
+<li>The latest report month should be the default view, with historical navigation available via a month selector.</li>
+</ul>
+</main>
+</body>
+</html>

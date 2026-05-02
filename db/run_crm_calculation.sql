@@ -1,6 +1,6 @@
 -- run_crm_calculation.sql
 -- Builds the canonical CRM customer snapshot for a single report month, per
--- docs/crm_calculation_logic.md. Output: table `crm_customer_snapshot`.
+-- docs/specs/crm_calculation_logic.md. Output: table `crm_customer_snapshot`.
 --
 -- Pipeline (top to bottom):
 --   tt_params              parameter row(s): report month, tier thresholds, anonymous-group marker

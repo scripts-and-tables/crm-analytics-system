@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRM Project — Source Files Details — CRM Analytics Showcase</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="docs-page">
+<header class="docs-header">
+  <a href="../index.html" class="back-link">&larr; Back to dashboard</a>
+  <h1>CRM Project — Source Files Details</h1>
+</header>
+<main class="docs-body">
+<h1 id="crm-project-source-files-details">CRM Project — Source Files Details</h1>
+<h2 id="purpose">Purpose</h2>
+<p>This document defines the <strong>input CSV files</strong> used by the CRM project:</p>
+<ul>
+<li>What each file represents</li>
+<li>Which columns it contains (field definitions, formats, and constraints)</li>
+<li>How the files relate to each other (keys and relationships)</li>
+</ul>
+<p>These files are expected to be stored in the project <strong>raw input folder</strong> (landing area) and serve as the authoritative source for downstream calculations (segments, activity status, events, etc.).</p>
+<hr />
+<h2 id="1-sales-transactions-csv">1) Sales Transactions (CSV)</h2>
+<h3 id="file-naming-convention">File naming convention</h3>
+<p>One file per year.</p>
+<p><strong>Examples</strong></p>
+<ul>
+<li><code>sales_transactions_2020.csv</code></li>
+<li><code>sales_transactions_2021.csv</code></li>
+<li><code>sales_transactions_2022.csv</code></li>
+</ul>
+<h3 id="what-it-represents">What it represents</h3>
+<p>Transactional sales records at <strong>invoice-line level</strong> (one row per <code>invoice_id</code> × <code>product_id</code>). This file family is the primary behavioral source used to derive consumable behavior, consumption, lifecycle, and event logic.</p>
+<h3 id="grain">Grain</h3>
+<ul>
+<li><strong>1 row per invoice_id / product_id</strong></li>
+</ul>
+<h3 id="columns">Columns</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+<th>Format / Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>invoice_id</code></td>
+<td>Business invoice identifier</td>
+<td>Text / Integer</td>
+<td><strong>Not a primary key</strong>; duplicates may exist depending on source rules</td>
+</tr>
+<tr>
+<td><code>customer_id</code></td>
+<td>Customer identifier</td>
+<td>Text / Integer</td>
+<td><strong>Foreign key</strong> → Customers master (<code>customer_id</code>)</td>
+</tr>
+<tr>
+<td><code>invoice_date</code></td>
+<td>Invoice date</td>
+<td><code>YYYY-MM-DD</code> (ISO)</td>
+<td>Date only (no time)</td>
+</tr>
+<tr>
+<td><code>product_id</code></td>
+<td>Product identifier</td>
+<td>Text / Integer</td>
+<td><strong>Foreign key</strong> → Products master (<code>product_id</code>)</td>
+</tr>
+<tr>
+<td><code>quantity</code></td>
+<td>Quantity sold</td>
+<td>Numeric</td>
+<td>Negative values represent returns and are excluded from CRM aggregates (see <code>crm_calculation_logic.md</code> §6.3).</td>
+</tr>
+<tr>
+<td><code>revenue</code></td>
+<td>Net amount (revenue)</td>
+<td>Numeric</td>
+<td>Net revenue amount per invoice line. Retained but not used by CRM logic; CRM measures volume in <code>units</code>.</td>
+</tr>
+<tr>
+<td><code>store_id</code></td>
+<td>Store identifier</td>
+<td>Text / Integer</td>
+<td>Optional, but retained</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Notes</strong></p>
+<ul>
+<li>These yearly files should have <strong>identical structure</strong> (same columns, formats, and meaning) to support concatenation into a single unified dataset.</li>
+</ul>
+<hr />
+<h2 id="2-customers-master-csv">2) Customers Master (CSV)</h2>
+<h3 id="file-name-example">File name (example)</h3>
+<p><code>customers_master.csv</code></p>
+<h3 id="what-it-represents_1">What it represents</h3>
+<p>Customer reference data (stable attributes used for segmentation, contactability, and grouping).</p>
+<h3 id="grain_1">Grain</h3>
+<ul>
+<li><strong>1 row per customer</strong></li>
+</ul>
+<h3 id="columns_1">Columns</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+<th>Format / Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>customer_id</code></td>
+<td>Customer identifier</td>
+<td>Text / Integer</td>
+<td><strong>Primary key</strong></td>
+</tr>
+<tr>
+<td><code>customer_name</code></td>
+<td>Customer name</td>
+<td>Text</td>
+<td></td>
+</tr>
+<tr>
+<td><code>customer_group</code></td>
+<td>Customer group / cluster</td>
+<td>Text</td>
+<td>Used for grouping/analysis</td>
+</tr>
+<tr>
+<td><code>city</code></td>
+<td>City</td>
+<td>Text</td>
+<td></td>
+</tr>
+<tr>
+<td><code>created_date</code></td>
+<td>Customer creation date</td>
+<td><code>YYYY-MM-DD</code> (ISO)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>Email address</td>
+<td>Text</td>
+<td>Nullable</td>
+</tr>
+<tr>
+<td><code>mobile_number</code></td>
+<td>Mobile phone number</td>
+<td>Text</td>
+<td>Nullable; store as text to preserve leading zeros/formatting</td>
+</tr>
+<tr>
+<td><code>opt_email</code></td>
+<td>Marketing consent for email</td>
+<td>Boolean / 0-1</td>
+<td>Nullable allowed; define default handling</td>
+</tr>
+<tr>
+<td><code>opt_sms</code></td>
+<td>Marketing consent for SMS</td>
+<td>Boolean / 0-1</td>
+<td>Nullable allowed; define default handling</td>
+</tr>
+<tr>
+<td><code>opt_phone</code></td>
+<td>Marketing consent for phone calls</td>
+<td>Boolean / 0-1</td>
+<td>Nullable allowed; define default handling</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-products-master-csv">3) Products Master (CSV)</h2>
+<h3 id="file-name-example_1">File name (example)</h3>
+<p><code>products_master.csv</code></p>
+<h3 id="what-it-represents_2">What it represents</h3>
+<p>Product reference data required to classify transactions (e.g., consumable vs non-consumable via category rules) and compute consumption.</p>
+<h3 id="grain_2">Grain</h3>
+<ul>
+<li><strong>1 row per product</strong></li>
+</ul>
+<h3 id="columns_2">Columns</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+<th>Format / Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>product_id</code></td>
+<td>Product identifier</td>
+<td>Integer</td>
+<td><strong>Primary key</strong></td>
+</tr>
+<tr>
+<td><code>product_name</code></td>
+<td>Product name</td>
+<td>Text</td>
+<td></td>
+</tr>
+<tr>
+<td><code>brand</code></td>
+<td>Brand</td>
+<td>Text</td>
+<td></td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>Product category</td>
+<td>Text</td>
+<td>Allowed values: <code>device</code>, <code>consumable</code>, <code>accessories</code>, <code>spare_parts</code>. CRM logic operates on <code>consumable</code>; <code>device</code> is used only for the First Device Purchase Date KPI.</td>
+</tr>
+<tr>
+<td><code>unit_size</code></td>
+<td>Volume / pack size per unit (units)</td>
+<td>Numeric</td>
+<td>Used to translate <code>quantity</code> into the <code>units</code> measure consumed by all CRM aggregates. Required for all <code>consumable</code> rows.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-file-relationships">4) File Relationships</h2>
+<h3 id="keys">Keys</h3>
+<ul>
+<li><code>sales_transactions.customer_id</code> → <code>customers_master.customer_id</code></li>
+<li><code>sales_transactions.product_id</code> → <code>products_master.product_id</code></li>
+</ul>
+<h2 id="_1"></h2>
+</main>
+</body>
+</html>

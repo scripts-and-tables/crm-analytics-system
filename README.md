@@ -1,91 +1,44 @@
 # CRM Analytics System
 
-## Overview
+> **Live demo:** [scripts-and-tables.github.io/crm-analytics-system](https://scripts-and-tables.github.io/crm-analytics-system) *(after enabling GitHub Pages on this repo, source = `docs/`)*
 
-This repository contains a **CRM analytics system** designed to transform raw transactional data into structured, refreshable CRM outputs used for customer analysis, segmentation, and reporting.
+End-to-end **CRM analytics showcase**: synthetic data generator → SQL calculation pipeline → static dashboard published on GitHub Pages. The dashboard demonstrates an RFMT-based customer-segmentation system in a way recruiters and peers can open with a single click — no `pip install`, no server.
 
-The focus of this project is **system design and analytics logic**, not dashboards or one-off analysis. The repository demonstrates how CRM analytics can be implemented in a structured, production-oriented way using clear data layers, deterministic rules, and reproducible refresh logic.
-
-All data used in this repository is synthetic.
+All data is synthetic and fully reproducible from a seeded Python script.
 
 ---
 
-## Scope of the Repository
+## What's in this repo
 
-This repository covers:
-
-* ingestion and structuring of raw CRM data
-* implementation of CRM analytics logic
-* generation of analytics-ready outputs for a Streamlit + Plotly dashboard and CSV / Excel exports
-
-Detailed business rules, thresholds, and segmentation logic are intentionally documented **outside of this README** and maintained in a dedicated business logic document.
-
----
-
-## Data Model (High Level)
-
-The system operates on three core datasets:
-
-* **Transactions**: sales records containing customer identifiers, dates, products, and values
-* **Customer master**: latest snapshot of customer attributes and identifiers
-* **Product master**: product definitions and classifications
-
-Raw data is stored in its original structure and transformed through controlled analytics layers.
-
-Input files data model: `/docs/source_files_specifications.md`.
+* a documented business-logic specification (`docs/specs/crm_calculation_logic.md`)
+* a SQLite schema and a single-month CRM calculation in plain SQL
+* a multi-month build orchestrator that produces a per-customer × per-month snapshot
+* a persona-driven synthetic-data generator (every CRM segment / lifecycle event populated by construction)
+* a static HTML + Plotly.js dashboard (filters, drill-down table, CSV export) served from `docs/` via GitHub Pages
+* a build script that exports the snapshot as JSON for the dashboard and as PNG screenshots for the README
 
 ---
 
-## Design Requirements
+## Screenshots
 
-The system is designed with the following requirements in mind:
+![Value Tier mix](docs/screenshots/tier_mix.png)
 
-* refreshable analytics based on new transactional data
-* clear separation between raw data and analytics logic
-* deterministic, explainable segmentation rules
-* time-aware customer analysis
-* compatibility with downstream reporting tools
+![Active customer mix by Value Tier — monthly](docs/screenshots/tier_trend.png)
 
-Project requirements: `/docs/project_requirements.md`.
-
+![Lifecycle events per month](docs/screenshots/events_trend.png)
 
 ---
 
 ## Core Analytics Concepts (Summary)
 
-* **Consumables drive CRM**
-  Customer engagement is measured using recurring **consumable** products. Device, accessory, and spare-part purchases are excluded from engagement metrics. The only device-based KPI is the First Device Purchase Date.
-
+* **Consumables drive CRM** — engagement is measured using recurring `consumable` products. `device`, `accessories`, and `spare_parts` purchases are excluded from engagement metrics; the only device-based KPI is `first_device_purchase_date`.
 * **Three independent customer outputs per month**
-  Each customer is assigned an **Activity Status** (Active / Not Active), a **Value Tier** (Passive override, then Diamond / Platinum / Gold / Silver / Bronze) and an optional **Monthly Lifecycle Event** (New / Lost / Reactivated).
+  * **Activity Status** — Active (`M12 > 0`) / Not Active.
+  * **Value Tier** — `Passive` (silent ≥6 months) overrides, then `Diamond → Platinum → Gold → Silver → Bronze` based on Average Monthly Consumption (AMC), Average Order Size (AOS), and orders in last 6 months (O6).
+  * **Lifecycle Event** — `New`, `Lost`, or `Reactivated` in the report month.
+* **RFMT-based value tiering** — Diamond and Platinum exercise Recency, Frequency and Monetary (volume) jointly; Tenure is captured as `tenure_months` for cohort analysis.
 
-* **RFMT-based value tiering**
-  Diamond and Platinum exercise Recency, Frequency and Monetary (volume) jointly via thresholds on AMC (Average Monthly Consumption), AOS (Average Order Size) and O6 (orders in last 6 months). Tenure is captured as `tenure_months` for cohort and loyalty analysis.
-
-Calculation / Segmentation full details: `/docs/crm_calculation_logic.md`.
-
----
-
-## Methodological Background
-
-The analytics approach implemented in this system is inspired by established CRM and customer analytics practices widely used in FMCG and retail organizations.
-
-RFM/RFMT-based segmentation is a well-known, empirically validated methodology used in direct marketing, loyalty programs, and customer value analysis, providing a transparent and business-interpretable alternative to black-box models.
-
-More about RFM on [Wikipedia](https://en.wikipedia.org/wiki/RFM_(market_research))
-
----
-
-## Outputs
-
-The system produces:
-
-* a customer × report-month CRM snapshot table (activity status, value tier, lifecycle event, RFMT features)
-* derived per-customer KPIs (`tenure_months`, AMC, AOS, first/last consumable purchase dates, first device purchase date)
-* a Streamlit + Plotly dashboard for slicing and exporting the snapshot
-* CSV / Excel exports for ad-hoc business use
-
-Outputs are designed to support both operational reporting and strategic CRM analysis.
+Full details in [`docs/specs/crm_calculation_logic.md`](docs/specs/crm_calculation_logic.md).
 
 ---
 
@@ -93,32 +46,38 @@ Outputs are designed to support both operational reporting and strategic CRM ana
 
 ```
 .
-├── docs/
-│   ├── crm_calculation_logic.md       KPI + segmentation rules (source of truth)
-│   ├── source_files_specifications.md input CSV schemas
-│   └── project_requirements.md
+├── docs/                              ← GitHub Pages root (source = docs/)
+│   ├── index.html                     showcase landing page (Plotly.js + vanilla JS)
+│   ├── data.json                      generated CRM snapshot for the JS to consume
+│   ├── assets/{css,js}/               page styles and client-side app
+│   ├── screenshots/                   PNG previews used in README
+│   └── specs/                         markdown specs (rendered to .html alongside)
+│       ├── crm_calculation_logic.md   KPI + segmentation rules (source of truth)
+│       ├── source_files_specifications.md
+│       └── project_requirements.md
 ├── db/
 │   ├── schema.sql                     raw_* table DDL (SQLite)
 │   ├── run_crm_calculation.sql        single-month CRM calc (parameterised in tt_params)
 │   └── build.py                       multi-month build orchestrator
-├── scripts/generate_data/
-│   ├── generate.py                    seeded synthetic CSV generator
-│   ├── verify.py                      smoke-test: load → calc → print distribution
-│   └── requirements.txt
-├── app/
-│   ├── streamlit_app.py               4-tab Streamlit + Plotly dashboard
-│   └── requirements.txt
+├── scripts/
+│   ├── build_report.py                SQLite → docs/data.json + screenshots + spec HTML
+│   └── generate_data/
+│       ├── generate.py                seeded synthetic CSV generator
+│       ├── verify.py                  smoke-test: load → calc → print distribution
+│       └── requirements.txt
 ├── CLAUDE.md                          project guide for AI assistants
 └── data/input/                        CSVs + crm.db (gitignored, rebuild locally)
 ```
 
 ---
 
-## How to Run
+## How to Run (locally rebuild everything)
 
 ```bash
 # 1. Install Python dependencies
-pip install -r scripts/generate_data/requirements.txt -r app/requirements.txt
+pip install -r scripts/generate_data/requirements.txt
+pip install plotly kaleido jinja2 markdown            # for the report builder
+yes | kaleido_get_chrome                              # one-off: PNG export needs headless Chrome
 
 # 2. Generate the synthetic CSVs in data/input/
 python scripts/generate_data/generate.py
@@ -129,31 +88,51 @@ python db/build.py
 # 4. (Optional) Verify the dataset exercises every CRM segment / event
 python scripts/generate_data/verify.py
 
-# 5. Launch the dashboard
-streamlit run app/streamlit_app.py
+# 5. Build the static site (writes docs/data.json, docs/screenshots/, docs/specs/*.html)
+python scripts/build_report.py
+
+# 6. (Optional) Open the page locally
+python -m http.server -d docs 8000
+# then open http://localhost:8000
 ```
 
-The dashboard reads `data/input/crm.db` and presents Overview, Segments, Lifecycle Trends and Products tabs. CSVs and the built database are gitignored — every reviewer rebuilds them locally from the seed-stable generator.
+---
+
+## Deploying to GitHub Pages
+
+After pushing to GitHub, in the repo settings → Pages:
+
+1. **Source**: Deploy from a branch
+2. **Branch**: `main` (or whichever default), **folder**: `/docs`
+3. Save. The site will be served at `https://<owner>.github.io/<repo>/`.
+
+GitHub Pages reads everything in `docs/` as-is (Jekyll is disabled via the `docs/.nojekyll` marker). The committed `docs/data.json` and `docs/screenshots/` are what the site actually serves — re-run `python scripts/build_report.py` and commit the regenerated artifacts whenever the underlying data or business logic changes.
+
+---
+
+## Methodological Background
+
+Inspired by established CRM and customer analytics practices used in FMCG and retail. RFM/RFMT segmentation is a transparent, business-interpretable alternative to black-box models. More about RFM on [Wikipedia](https://en.wikipedia.org/wiki/RFM_(market_research)).
 
 ---
 
 ## Limitations
 
-* The repository uses synthetic data only.
-* Predictive modeling is intentionally out of scope.
-* Master data is treated as point-in-time snapshots.
+* Fully synthetic dataset.
+* Predictive modelling intentionally out of scope.
+* Master data treated as point-in-time snapshots.
 
 ---
 
 ## Potential Extensions
 
-* churn and reactivation modeling
-* customer lifetime value forecasting
-* promotion and uplift analysis
-* near-real-time refresh orchestration
+* Churn and reactivation modelling
+* Customer lifetime value forecasting
+* Promotion and uplift analysis
+* GitHub Action that rebuilds `docs/` on every push to `main`
 
 ---
 
 ## License
 
-This project is provided under the **MIT License** and is intended as a reference implementation of a CRM analytics system.
+MIT. Reference implementation; not for production use.

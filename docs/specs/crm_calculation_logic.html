@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRM Analytics – Business Logic (CRM Layer) — CRM Analytics Showcase</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="docs-page">
+<header class="docs-header">
+  <a href="../index.html" class="back-link">&larr; Back to dashboard</a>
+  <h1>CRM Analytics – Business Logic (CRM Layer)</h1>
+</header>
+<main class="docs-body">
+<h1 id="crm-analytics-business-logic-crm-layer">CRM Analytics – Business Logic (CRM Layer)</h1>
+<h2 id="1-purpose">1. Purpose</h2>
+<p>This document defines the <strong>CRM-specific analytical logic</strong> used to evaluate each customer's status, value tier and lifecycle events based on their <strong>consumable purchase behavior</strong>.</p>
+<p>The scope is intentionally limited to <strong>CRM logic only</strong>. Topics such as data ingestion, storage, data modeling, dashboards and reporting are documented separately.</p>
+<hr />
+<h2 id="2-product-taxonomy">2. Product Taxonomy</h2>
+<p>The product master groups items into the following categories:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>device</code></td>
+<td>Durable main item; typically purchased once. Triggers entry into the customer base.</td>
+</tr>
+<tr>
+<td><code>consumable</code></td>
+<td>Recurring-purchase product attached to the device. <strong>Primary input to all CRM KPIs.</strong></td>
+</tr>
+<tr>
+<td><code>accessories</code></td>
+<td>Optional add-on items.</td>
+</tr>
+<tr>
+<td><code>spare_parts</code></td>
+<td>Replacement parts for the device.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rule of scope.</strong> All CRM KPIs are computed from <code>consumable</code> transactions only, with one exception: the <strong>First Device Purchase Date</strong> KPI is computed from <code>device</code> transactions (Section 4.2).</p>
+<hr />
+<h2 id="3-analytical-model-overview-rfmt">3. Analytical Model Overview (RFMT)</h2>
+<p>Customer evaluation is based on four behavioral dimensions:</p>
+<ul>
+<li><strong>Recency</strong> – how recently the customer purchased a consumable</li>
+<li><strong>Frequency</strong> – how often the customer purchased consumables</li>
+<li><strong>Monetary</strong> – how much volume (units) the customer generated from consumables</li>
+<li><strong>Tenure</strong> – how long the customer has been purchasing consumables</li>
+</ul>
+<p>In this document RFMT is treated strictly as the <strong>input framework</strong>; the operational outputs are an Activity Status, a Value Tier (with the Passive override) and a Monthly Lifecycle Event, all defined in Section 5.</p>
+<hr />
+<h2 id="4-reporting-cadence-and-conventions">4. Reporting Cadence and Conventions</h2>
+<h3 id="41-calendar-month-snapshot">4.1 Calendar-month snapshot</h3>
+<p>The CRM layer produces one snapshot <strong>per calendar month</strong>, computed at <strong>month-end</strong>.</p>
+<ul>
+<li>When the report is generated for a month <em>M</em>, the evaluation date is the last day of <em>M</em>.</li>
+<li>The "last 12 months" window for a report on <strong>April 2026</strong> is <strong>May 2025 → April 2026</strong> (12 full calendar months).</li>
+<li>Partial months and day-level windows are intentionally not used — this keeps month-over-month comparisons stable.</li>
+</ul>
+<h3 id="42-per-customer-base-aggregates-the-m-fields">4.2 Per-customer base aggregates (the M-fields)</h3>
+<p>For every customer and every report month the system precomputes the following base aggregates over <strong>consumable transactions only</strong> (positive units only — see Section 6.3):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>M_total</code></td>
+<td>Total consumable units purchased ever, across the customer's full history.</td>
+</tr>
+<tr>
+<td><code>M1</code></td>
+<td>Consumable units purchased in the <strong>last 1 calendar month</strong> (the report month).</td>
+</tr>
+<tr>
+<td><code>M6</code></td>
+<td>Consumable units purchased in the <strong>last 6 calendar months</strong>.</td>
+</tr>
+<tr>
+<td><code>M12</code></td>
+<td>Consumable units purchased in the <strong>last 12 calendar months</strong>.</td>
+</tr>
+<tr>
+<td><code>M13</code></td>
+<td>Consumable units purchased in the <strong>last 13 calendar months</strong>.</td>
+</tr>
+<tr>
+<td><code>M24</code></td>
+<td>Consumable units purchased in the <strong>last 24 calendar months</strong>.</td>
+</tr>
+<tr>
+<td><code>M25</code></td>
+<td>Consumable units purchased in the <strong>last 25 calendar months</strong>.</td>
+</tr>
+<tr>
+<td><code>O6</code></td>
+<td>Number of consumable <strong>orders</strong> (invoices) in the last 6 calendar months.</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>M*</code> fields are deliberately overlapping (each is a cumulative window ending at the report month). They are the only intermediate signals required: every Activity Status, Value Tier, and Lifecycle Event below is derived from them by simple comparisons.</p>
+<blockquote>
+<p><strong>Why M13 and M25?</strong> They are not redundant with M12 and M24: the difference <code>M13 − M12</code> tells us whether the customer made a purchase exactly <strong>13 months ago</strong>, which is what we need to detect a fresh transition into the <em>Not Active</em> state. Same idea for M25.</p>
+</blockquote>
+<h3 id="43-derived-per-customer-kpis">4.3 Derived per-customer KPIs</h3>
+<table>
+<thead>
+<tr>
+<th>KPI</th>
+<th>Formula</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>First Device Purchase Date</strong></td>
+<td><code>MIN(invoice_date)</code> over <code>device</code> transactions</td>
+<td>Entry into the customer base.</td>
+</tr>
+<tr>
+<td><strong>First Consumable Purchase Date</strong></td>
+<td><code>MIN(invoice_date)</code> over <code>consumable</code> transactions</td>
+<td>Start of consumable lifecycle.</td>
+</tr>
+<tr>
+<td><strong>Last Consumable Purchase Date</strong></td>
+<td><code>MAX(invoice_date)</code> over <code>consumable</code> transactions</td>
+<td>Most recent recurring engagement.</td>
+</tr>
+<tr>
+<td><strong>Tenure Months</strong></td>
+<td>calendar months between <code>first_consumable_purchase_date</code> and <code>report_month_end</code>, <strong>inclusive of the first purchase month</strong> (NULL if customer has never purchased a consumable)</td>
+<td>How long the customer has been a consumable buyer. Loyalty / cohort axis.</td>
+</tr>
+<tr>
+<td><strong>Average Monthly Consumption (AMC)</strong></td>
+<td><code>M6 / 6</code></td>
+<td>Unit volume per month, smoothed over 6 mo.</td>
+</tr>
+<tr>
+<td><strong>Average Order Size (AOS)</strong></td>
+<td><code>M6 / O6</code> (NULL if <code>O6 = 0</code>)</td>
+<td>Average units per consumable order, last 6 mo.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tenure Months convention.</strong> The first purchase month counts as month 1. Worked examples for a report month-end of April 2026:</p>
+<table>
+<thead>
+<tr>
+<th><code>first_consumable_purchase_date</code></th>
+<th><code>tenure_months</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>April 2026</td>
+<td>1</td>
+</tr>
+<tr>
+<td>March 2026</td>
+<td>2</td>
+</tr>
+<tr>
+<td>April 2025</td>
+<td>13</td>
+</tr>
+<tr>
+<td>January 2024</td>
+<td>28</td>
+</tr>
+<tr>
+<td>(never purchased a consumable)</td>
+<td>NULL</td>
+</tr>
+</tbody>
+</table>
+<p>Equivalent formula:</p>
+<pre><code>tenure_months = (YEAR(report_month_end) - YEAR(first_consumable_purchase_date)) * 12
+              + (MONTH(report_month_end) - MONTH(first_consumable_purchase_date))
+              + 1
+</code></pre>
+<p>NULL — not 0 — is used for customers with no consumable purchases, so that "first month of purchase" (<code>= 1</code>) and "never purchased" (<code>= NULL</code>) are unambiguously distinguishable.</p>
+<hr />
+<h2 id="5-customer-outputs-per-report-month">5. Customer Outputs (per report month)</h2>
+<p>The CRM layer assigns three complementary outputs to every eligible customer in every report month:</p>
+<ol>
+<li><strong>Activity Status</strong> — Active vs Not Active (Section 5.1)</li>
+<li><strong>Value Tier</strong> — Passive, or one of the volume tiers (Section 5.2). Defined only for Active customers.</li>
+<li><strong>Monthly Lifecycle Event</strong> — New / Lost / Reactivated, or none (Section 5.3)</li>
+</ol>
+<p>These are independent fields and can be combined freely in reporting.</p>
+<h3 id="51-activity-status">5.1 Activity Status</h3>
+<p>Derived directly from <code>M12</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Rule</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Active</strong></td>
+<td><code>M12 &gt; 0</code></td>
+<td>At least one consumable purchase in the last 12 calendar months.</td>
+</tr>
+<tr>
+<td><strong>Not Active</strong></td>
+<td><code>M12 = 0</code></td>
+<td>No consumable purchases in the last 12 calendar months.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-value-tier-defined-for-active-customers-only">5.2 Value Tier (defined for Active customers only)</h3>
+<p>The Value Tier is evaluated <strong>top-down with first-match precedence</strong> — once a row matches, all later rules are ignored. The first rule (Passive) overrides everything else.</p>
+<blockquote>
+<p><strong>Tier names.</strong> The names below (Diamond / Platinum / Gold / Silver / Bronze, plus Passive) are an initial proposal — they have a clear hierarchical reading. The thresholds on AMC and AOS are placeholders; final values will be calibrated against the synthetic dataset.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Tier</th>
+<th>Rule</th>
+<th>Intent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Passive</strong></td>
+<td><code>M6 = 0</code></td>
+<td>Active in 12-month window but <strong>silent for 6+ months</strong>. Override — applied before any volume tier.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Diamond</strong></td>
+<td><code>AMC ≥ T_high</code> <strong>AND</strong> <code>AOS ≥ A_high</code> <strong>AND</strong> <code>O6 ≥ F_high</code></td>
+<td>Top: high recurring volume, large baskets <strong>and</strong> consistent order frequency.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Platinum</strong></td>
+<td><code>AMC ≥ T_high</code> <strong>AND</strong> <code>O6 ≥ F_mid</code></td>
+<td>High recurring volume sustained across multiple orders.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Gold</strong></td>
+<td><code>AMC ≥ T_mid_high</code></td>
+<td>Solid recurring buyer.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Silver</strong></td>
+<td><code>AMC ≥ T_mid</code></td>
+<td>Moderate recurring buyer.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Bronze</strong></td>
+<td><code>AMC &gt; 0</code></td>
+<td>Any recurring activity in the last 6 months.</td>
+</tr>
+</tbody>
+</table>
+<p>Threshold variables (<code>T_high</code>, <code>T_mid_high</code>, <code>T_mid</code>, <code>A_high</code>, <code>F_high</code>, <code>F_mid</code>) are defined in a separate calibration table once the synthetic data is in place.</p>
+<blockquote>
+<p><strong>Why a frequency gate on the top two tiers?</strong> Without <code>O6 ≥ F_*</code>, a customer who placed a single very large order in the last 6 months could land in Diamond/Platinum on volume alone. The frequency gate ensures that the top tiers reward <strong>sustained engagement</strong>, not one-off volume spikes — completing the RFMT picture (Diamond/Platinum exercise R, F and M; Gold/Silver/Bronze exercise M only and are differentiated purely by volume).</p>
+<p><strong>Important.</strong> Because rule 1 (Passive) supersedes everything else, the Diamond → Bronze hierarchy is meaningful only for customers with at least one consumable purchase in the last 6 calendar months.</p>
+</blockquote>
+<h3 id="53-monthly-lifecycle-event">5.3 Monthly Lifecycle Event</h3>
+<p>The Monthly Lifecycle Event captures what changed <strong>during the report month</strong>. It is optional — if no event applies, the field is left blank. Only one event can be assigned per customer per month; the rules are mutually exclusive by construction.</p>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Rule</th>
+<th>Reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>New</strong></td>
+<td><code>M1 = M_total</code></td>
+<td>All of the customer's consumable history is in this single month → <strong>first-ever</strong> consumable purchase happened this month.</td>
+</tr>
+<tr>
+<td><strong>Lost</strong></td>
+<td><code>M12 = 0</code> <strong>AND</strong> <code>M13 &gt; 0</code></td>
+<td>The customer's last consumable purchase fell <strong>exactly out of the 12-month window</strong> this month — this is the first month they are recognized as Not Active.</td>
+</tr>
+<tr>
+<td><strong>Reactivated</strong></td>
+<td><code>M1 = M13</code> <strong>AND</strong> <code>M_total &gt; M13</code></td>
+<td>Everything in the last 13 months happened this month (i.e. zero purchases in months 2–13), <strong>and</strong> the customer purchased earlier than 13 months ago — they were Not Active and just came back.</td>
+</tr>
+</tbody>
+</table>
+<p>Notes on the formulas:</p>
+<ul>
+<li><code>M1 = M_total</code> for <strong>New</strong> captures that the customer has no history outside this month.</li>
+<li>For <strong>Lost</strong>, we compare the cumulative 12- and 13-month windows: <code>M13 − M12 &gt; 0</code> would be an equivalent way to say "the customer purchased in the 13th month back". Using <code>M12 = 0</code> ensures we only flag the <em>first</em> month they fail the activity test.</li>
+<li>For <strong>Reactivated</strong>, the condition <code>M1 = M13</code> is equivalent to "no purchases in months 2 through 13", so the customer had been Not Active in the previous month. The extra condition <code>M_total &gt; M13</code> excludes truly-new customers (who are caught by <strong>New</strong> instead).</li>
+</ul>
+<hr />
+<h2 id="6-evaluation-rules-and-edge-conditions">6. Evaluation Rules and Edge Conditions</h2>
+<h3 id="61-top-down-precedence">6.1 Top-down precedence</h3>
+<p>Customer evaluation follows <strong>top-down precedence</strong> within each output (Activity Status, Value Tier, Lifecycle Event). Statuses are checked sequentially and the <strong>first matching rule is applied</strong> — once a condition is satisfied, all subsequent (lower-priority) rules are ignored. This guarantees deterministic, unambiguous classification.</p>
+<h3 id="62-calendar-month-evaluation">6.2 Calendar-month evaluation</h3>
+<p>All windows are full calendar months (Section 4.1). No rolling day-level windows.</p>
+<h3 id="63-negative-transactions-returns">6.3 Negative transactions (returns)</h3>
+<p>Transaction history may contain negative-quantity transactions representing returns or refunds.</p>
+<ul>
+<li>Only transactions with <strong>positive consumable quantity / units</strong> are included in any CRM aggregate.</li>
+<li>Negative consumable transactions (returns) are excluded.</li>
+<li>Original positive purchases are retained even if a corresponding return exists in another month.</li>
+</ul>
+<p>CRM evaluation is performed <strong>as if returns never occurred</strong>. This may introduce a small inaccuracy (a customer counted as active despite a later return) but is considered acceptable given the analytical scope.</p>
+<h3 id="64-general-anonymous-customers">6.4 General / Anonymous customers</h3>
+<p>The customer master may contain customers of type <strong>General</strong> (or equivalent) — walk-ins, tourists, customers without identifiable contact details. Such customers:</p>
+<ul>
+<li>are included in raw transactional data,</li>
+<li>are <strong>excluded</strong> from all CRM analysis, segmentation and lifecycle tracking.</li>
+</ul>
+<h3 id="65-measurement-unit-units-volume">6.5 Measurement unit (units / volume)</h3>
+<p>All consumable purchase metrics are measured in <strong>units</strong> (the volume / pack-size measure recorded on the product master), not in monetary value.</p>
+<ul>
+<li>Each consumable product carries a <code>unit_size</code> value in the product master.</li>
+<li>Transaction-level units = <code>quantity × unit_size</code>.</li>
+<li>Aggregated metrics (<code>M*</code>, AMC, AOS) are sums of units across consumable transactions.</li>
+</ul>
+<p>This makes engagement independent of pricing, discounts and promotions, and accounts for differences in pack size across consumable SKUs.</p>
+<hr />
+<h2 id="7-summary-of-crm-output-schema">7. Summary of CRM output schema</h2>
+<p>For each customer × report month, the CRM layer emits:</p>
+<ul>
+<li><strong>Identifiers</strong>: <code>customer_id</code>, <code>report_month</code></li>
+<li><strong>Base aggregates</strong>: <code>M_total</code>, <code>M1</code>, <code>M6</code>, <code>M12</code>, <code>M13</code>, <code>M24</code>, <code>M25</code>, <code>O6</code></li>
+<li><strong>Derived KPIs</strong>: <code>first_device_purchase_date</code>, <code>first_consumable_purchase_date</code>, <code>last_consumable_purchase_date</code>, <code>tenure_months</code>, <code>avg_monthly_consumption</code>, <code>avg_order_size</code></li>
+<li><strong>Status fields</strong>: <code>activity_status</code>, <code>value_tier</code>, <code>lifecycle_event</code></li>
+</ul>
+<p>This is the canonical output that downstream reporting (Streamlit dashboard, exports) consumes.</p>
+</main>
+</body>
+</html>
