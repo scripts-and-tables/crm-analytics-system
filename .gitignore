@@ -1,5 +1,8 @@
 /data/input/data.db
 
+# Built CRM database (rebuild with db/build.py)
+/data/input/crm.db
+
 # Generated synthetic data (rebuild with scripts/generate_data/generate.py)
 /data/input/*.csv
 

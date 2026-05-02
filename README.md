@@ -89,14 +89,26 @@ Outputs are designed to support both operational reporting and strategic CRM ana
 
 ---
 
-## How to Run (High Level)
+## How to Run
 
-1. Generate or place the raw customer, product, and transaction CSVs in `data/input/`.
-2. Build the SQLite database from `db/schema.sql` and load the CSVs.
-3. Run `db/run_crm_calculation.sql` to materialize the CRM snapshot table.
-4. Launch the Streamlit dashboard to explore segments, lifecycle events, and KPIs.
+```bash
+# 1. Install Python dependencies
+pip install -r scripts/generate_data/requirements.txt -r app/requirements.txt
 
-A one-shot helper script will be added once the data generator and dashboard are in place.
+# 2. Generate the synthetic CSVs in data/input/
+python scripts/generate_data/generate.py
+
+# 3. Build the SQLite database (schema + load CSVs + 12-month CRM snapshot)
+python db/build.py
+
+# 4. (Optional) Verify the dataset exercises every CRM segment / event
+python scripts/generate_data/verify.py
+
+# 5. Launch the dashboard
+streamlit run app/streamlit_app.py
+```
+
+The dashboard reads `data/input/crm.db` and presents Overview, Segments, Lifecycle Trends and Products tabs. CSVs and the built database are gitignored — every reviewer rebuilds them locally from the seed-stable generator.
 
 ---
 
