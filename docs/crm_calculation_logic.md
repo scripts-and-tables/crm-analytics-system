@@ -2,185 +2,183 @@
 
 ## 1. Purpose
 
-This document defines the **CRM-specific analytical logic** used to evaluate customer status and engagement based on refill purchase behavior.
+This document defines the **CRM-specific analytical logic** used to evaluate each customer's status, value tier and lifecycle events based on their **consumable purchase behavior**.
 
-The scope of this document is intentionally limited to **CRM logic only**. Topics such as data ingestion, storage, data modeling, and reporting are documented separately.
-
----
-
-## 2. Analytical Model Overview (RFMT)
-
-Customer evaluation in this CRM system is based on four fundamental behavioral dimensions:
-
-* **Recency** – how recently a customer purchased a refill
-* **Frequency** – how often a customer purchased refills
-* **Monetary** – how much value the customer generated from refills
-* **Tenure** – how long the customer has been purchasing refills
-
-This RFMT-based approach is a well-established and widely used methodology in CRM and customer analytics, particularly in FMCG and retail environments.
-
-A detailed explanation of the scientific background, empirical justification, and practical considerations of the RFMT model is provided in a **separate methodological document**.
-
-In this document, RFMT is treated strictly as an **input framework** for customer status evaluation.
+The scope is intentionally limited to **CRM logic only**. Topics such as data ingestion, storage, data modeling, dashboards and reporting are documented separately.
 
 ---
 
-## 3. Customer Evaluation and Status Classification
+## 2. Product Taxonomy
 
-Customer evaluation is performed **at month-end** and is derived exclusively from **refill purchase history**.
+The product master groups items into the following categories:
 
-Only refill purchases are considered. Device and accessory purchases are excluded from all CRM calculations.
+| Category       | Description                                                                                |
+|----------------|--------------------------------------------------------------------------------------------|
+| `device`       | Durable main item; typically purchased once. Triggers entry into the customer base.        |
+| `consumable`   | Recurring-purchase product attached to the device. **Primary input to all CRM KPIs.**      |
+| `accessories`  | Optional add-on items.                                                                     |
+| `spare_parts`  | Replacement parts for the device.                                                          |
 
-The CRM layer assigns three complementary outputs for each customer and evaluation month:
-
-1. **Activity status** (active vs not active)
-2. **Segment** (business-facing customer group)
-3. **Current month event** (what changed during the month)
-
-These outputs are designed to be consumed independently (for reporting) and jointly (for lifecycle tracking).
-
----
-
-### 3.1 Activity Status
-
-* **Active**: the customer made at least one refill purchase within the **last 12 months** relative to the evaluation month.
-* **Not Active**: the customer made **no** refill purchases within the last 12 months.
+**Rule of scope.** All CRM KPIs are computed from `consumable` transactions only, with one exception: the **First Device Purchase Date** KPI is computed from `device` transactions (Section 4.2).
 
 ---
 
-### 3.2 Segment
+## 3. Analytical Model Overview (RFMT)
 
-Segment is the primary business-facing classification. It is derived from refill purchase history and customer behavior.
+Customer evaluation is based on four behavioral dimensions:
 
-Segments include:
+* **Recency** – how recently the customer purchased a consumable
+* **Frequency** – how often the customer purchased consumables
+* **Monetary** – how much volume (units) the customer generated from consumables
+* **Tenure** – how long the customer has been purchasing consumables
 
-* **New**: customer’s first-ever refill purchase date is within the last 12 months.
-* **Lost**: customer made refill purchases historically, but made **no** refill purchases within the last 12 months.
-* **Pre-Lost**: customer made refill purchases historically, but made **no** refill purchases within the **last 6 months** (while still within the 12‑month activity window).
-* **Ultra**: average refill consumption ≥ **800 g per month** over the **last 6 months**, and **at least 6 refill transactions** in the last 6 months.
-* **Heavy**: average refill consumption ≥ **600 g per month** over the **last 6 months**, and **at least 3 refill transactions** in the last 6 months.
-* **Large**: average refill consumption ≥ **250 g per month** over the **last 6 months**.
-* **Average**: average refill consumption ≥ **175 g per month** over the **last 6 months**.
-* **Low**: average refill consumption ≥ **100 g per month** over the **last 6 months**.
-* **Minimal**: average refill consumption < **100 g per month** over the **last 6 months**.
+In this document RFMT is treated strictly as the **input framework**; the operational outputs are an Activity Status, a Value Tier (with the Passive override) and a Monthly Lifecycle Event, all defined in Section 5.
 
 ---
 
-### 3.3 Current Month Event
+## 4. Reporting Cadence and Conventions
 
-Current Month Event captures notable lifecycle events that occur **during the evaluation month**. This field is optional and may be blank.
+### 4.1 Calendar-month snapshot
 
-Supported event values:
+The CRM layer produces one snapshot **per calendar month**, computed at **month-end**.
 
-* **New**: the customer completed their **first-ever refill purchase** during the evaluation month.
-* **Lost**: the customer is classified as Lost in the evaluation month, and was **not** Lost in the immediately preceding month (first month recognized as lost).
-* **Reactivated**: the customer was Lost in the immediately preceding month and made at least one refill purchase during the evaluation month.
+* When the report is generated for a month *M*, the evaluation date is the last day of *M*.
+* The "last 12 months" window for a report on **April 2026** is **May 2025 → April 2026** (12 full calendar months).
+* Partial months and day-level windows are intentionally not used — this keeps month-over-month comparisons stable.
 
-If none of the above events occur, the field remains blank.
+### 4.2 Per-customer base aggregates (the M-fields)
 
----
+For every customer and every report month the system precomputes the following base aggregates over **consumable transactions only** (positive units only — see Section 6.3):
 
-## 4. Suggested CRM Calculation Fields
+| Field          | Definition                                                                          |
+|----------------|-------------------------------------------------------------------------------------|
+| `M_total`      | Total consumable units purchased ever, across the customer's full history.          |
+| `M1`           | Consumable units purchased in the **last 1 calendar month** (the report month).     |
+| `M6`           | Consumable units purchased in the **last 6 calendar months**.                       |
+| `M12`          | Consumable units purchased in the **last 12 calendar months**.                      |
+| `M13`          | Consumable units purchased in the **last 13 calendar months**.                      |
+| `M24`          | Consumable units purchased in the **last 24 calendar months**.                      |
+| `M25`          | Consumable units purchased in the **last 25 calendar months**.                      |
+| `O6`           | Number of consumable **orders** (invoices) in the last 6 calendar months.           |
 
-To generate a CRM snapshot for a given evaluation month, the system is expected to calculate the following fields **for each customer**.
+The `M*` fields are deliberately overlapping (each is a cumulative window ending at the report month). They are the only intermediate signals required: every Activity Status, Value Tier, and Lifecycle Event below is derived from them by simple comparisons.
 
-These fields represent the minimal, canonical feature set required to support activity status, segmentation, and lifecycle tracking.
+> **Why M13 and M25?** They are not redundant with M12 and M24: the difference `M13 − M12` tells us whether the customer made a purchase exactly **13 months ago**, which is what we need to detect a fresh transition into the *Not Active* state. Same idea for M25.
 
-### 4.1 Status & Classification Fields
+### 4.3 Derived per-customer KPIs
 
-* **Activity Status** (Active / Not Active)
-* **Segment** (New, Lost, Pre-Lost, Ultra, Heavy, Large, Average, Low, Minimal)
-* **Current Month Event** (New, Lost, Reactivated, or NULL)
-
----
-
-### 4.2 Key Refill Purchase Dates
-
-* **First Refill Purchase Date**
-* **Last Refill Purchase Date**
-
-Dates are derived exclusively from positive refill transactions.
-
----
-
-### 4.3 Consumption & Engagement Metrics
-
-All metrics below are calculated using **grammage**, as defined in the items / product master.
-
-* **Total Refill Consumption (6M)** – total grammage purchased in the last 6 calendar months
-* **Total Refill Consumption (12M)** – total grammage purchased in the last 12 calendar months
-* **Number of Refill Transactions (6M)** – count of refill purchase invoices in the last 6 calendar months
-
-These metrics serve as inputs for segmentation logic and downstream CRM analytics.
+| KPI                                | Formula                                                | Notes                                       |
+|------------------------------------|--------------------------------------------------------|---------------------------------------------|
+| **First Device Purchase Date**     | `MIN(invoice_date)` over `device` transactions         | Entry into the customer base.               |
+| **First Consumable Purchase Date** | `MIN(invoice_date)` over `consumable` transactions     | Start of consumable lifecycle.              |
+| **Last Consumable Purchase Date**  | `MAX(invoice_date)` over `consumable` transactions     | Most recent recurring engagement.           |
+| **Average Monthly Consumption (AMC)** | `M6 / 6`                                            | Unit volume per month, smoothed over 6 mo.  |
+| **Average Order Size (AOS)**       | `M6 / O6` (NULL if `O6 = 0`)                           | Average units per consumable order, last 6 mo. |
 
 ---
 
-## 5. Evaluation Rules and Edge Conditions
+## 5. Customer Outputs (per report month)
 
-The following limitations, assumptions, and exceptions apply to the current CRM logic:
+The CRM layer assigns three complementary outputs to every eligible customer in every report month:
 
-### 5.1 Evaluation Order and Precedence
+1. **Activity Status** — Active vs Not Active (Section 5.1)
+2. **Value Tier** — Passive, or one of the volume tiers (Section 5.2). Defined only for Active customers.
+3. **Monthly Lifecycle Event** — New / Lost / Reactivated, or none (Section 5.3)
 
-Customer evaluation follows a **top-down precedence order**.
+These are independent fields and can be combined freely in reporting.
 
-Statuses and segments are checked **sequentially**, and the **first matching condition is applied**. Once a condition is satisfied, all subsequent (lower-priority) conditions are ignored, even if they could also be met.
+### 5.1 Activity Status
 
-This guarantees deterministic and unambiguous classification.
+Derived directly from `M12`:
 
----
+| Status        | Rule         | Meaning                                                       |
+|---------------|--------------|---------------------------------------------------------------|
+| **Active**    | `M12 > 0`    | At least one consumable purchase in the last 12 calendar months. |
+| **Not Active**| `M12 = 0`    | No consumable purchases in the last 12 calendar months.       |
 
-### 5.2 Calendar Month Evaluation
+### 5.2 Value Tier (defined for Active customers only)
 
-All calculations are performed using **calendar months**, not rolling day-level windows.
+The Value Tier is evaluated **top-down with first-match precedence** — once a row matches, all later rules are ignored. The first rule (Passive) overrides everything else.
 
-* When evaluating activity in the **last 12 months** for a report month (e.g. December 2025), the system considers all refill purchases from **1 January 2025 through 31 December 2025**.
-* Partial months or day-level precision are intentionally not used.
+> **Tier names.** The names below (Diamond / Platinum / Gold / Silver / Bronze, plus Passive) are an initial proposal — they have a clear hierarchical reading. The thresholds on AMC and AOS are placeholders; final values will be calibrated against the synthetic dataset.
 
-This approach simplifies reporting, improves stability of month-over-month comparisons, and aligns with standard CRM reporting practices.
+| Order | Tier         | Rule                                            | Intent                                          |
+|-------|--------------|-------------------------------------------------|-------------------------------------------------|
+| 1     | **Passive**  | `M6 = 0`                                        | Active in 12-month window but **silent for 6+ months**. Override — applied before any volume tier. |
+| 2     | **Diamond**  | `AMC ≥ T_high` **AND** `AOS ≥ A_high`           | Top: high recurring volume **and** large baskets. |
+| 3     | **Platinum** | `AMC ≥ T_high`                                  | High recurring volume, smaller baskets.          |
+| 4     | **Gold**     | `AMC ≥ T_mid_high`                              | Solid recurring buyer.                           |
+| 5     | **Silver**   | `AMC ≥ T_mid`                                   | Moderate recurring buyer.                        |
+| 6     | **Bronze**   | `AMC > 0`                                       | Any recurring activity in the last 6 months.     |
 
----
+Threshold variables (`T_high`, `T_mid_high`, `T_mid`, `A_high`) are defined in a separate calibration table once the synthetic data is in place.
 
-### 5.3 Negative Transactions (Returns)
+> **Important.** Because rule 1 (Passive) supersedes everything else, the Diamond → Bronze hierarchy is meaningful only for customers with at least one consumable purchase in the last 6 calendar months.
 
-Transaction history may contain **negative-value transactions**, representing returns or refunds.
+### 5.3 Monthly Lifecycle Event
 
-For the purposes of this CRM analysis:
+The Monthly Lifecycle Event captures what changed **during the report month**. It is optional — if no event applies, the field is left blank. Only one event can be assigned per customer per month; the rules are mutually exclusive by construction.
 
-* Only transactions with **positive refill quantity / grammage** are included in all calculations.
-* Negative refill transactions (returns) are **excluded from analysis**.
-* Positive refill purchases are always treated as valid, even if a return exists in a different month.
+| Event           | Rule                                                              | Reading                                                                 |
+|-----------------|-------------------------------------------------------------------|-------------------------------------------------------------------------|
+| **New**         | `M1 = M_total`                                                    | All of the customer's consumable history is in this single month → **first-ever** consumable purchase happened this month. |
+| **Lost**        | `M12 = 0` **AND** `M13 > 0`                                       | The customer's last consumable purchase fell **exactly out of the 12-month window** this month — this is the first month they are recognized as Not Active. |
+| **Reactivated** | `M1 = M13` **AND** `M_total > M13`                                | Everything in the last 13 months happened this month (i.e. zero purchases in months 2–13), **and** the customer purchased earlier than 13 months ago — they were Not Active and just came back. |
 
-In other words, CRM evaluation is performed **as if returns never occurred**, while original positive purchases are retained.
+Notes on the formulas:
 
-This simplification may introduce limited inaccuracies (e.g. a customer counted as active despite having returned a refill), but is considered acceptable given the analytical scope and the need for deterministic, stable CRM logic.
-
----
-
-### 5.4 General / Anonymous Customers
-
-The customer master may contain customers of type **General** (or equivalent), representing:
-
-* walk-in customers
-* tourists
-* customers without loyalty program registration or identifiable contact details
-
-Such customers are:
-
-* included in raw transactional data
-* **excluded from all CRM analysis and segmentation**
-
-CRM logic applies only to identifiable customers suitable for lifecycle and engagement analysis.
+* `M1 = M_total` for **New** captures that the customer has no history outside this month.
+* For **Lost**, we compare the cumulative 12- and 13-month windows: `M13 − M12 > 0` would be an equivalent way to say "the customer purchased in the 13th month back". Using `M12 = 0` ensures we only flag the *first* month they fail the activity test.
+* For **Reactivated**, the condition `M1 = M13` is equivalent to "no purchases in months 2 through 13", so the customer had been Not Active in the previous month. The extra condition `M_total > M13` excludes truly-new customers (who are caught by **New** instead).
 
 ---
 
-### 5.5 Measurement Unit (Grammage)
+## 6. Evaluation Rules and Edge Conditions
 
-All refill purchase metrics are calculated using **grammage (volume/weight)** rather than monetary value.
+### 6.1 Top-down precedence
 
-* Each refill product has an associated **grammage value** defined in the **items / product master**.
-* Transaction-level grammage is derived by multiplying the number of units sold by the product-specific grammage.
-* Aggregated CRM metrics (e.g. consumption over 12 months) are calculated as the sum of grammage across refill transactions.
+Customer evaluation follows **top-down precedence** within each output (Activity Status, Value Tier, Lifecycle Event). Statuses are checked sequentially and the **first matching rule is applied** — once a condition is satisfied, all subsequent (lower-priority) rules are ignored. This guarantees deterministic, unambiguous classification.
 
-This approach ensures that customer engagement is measured based on **actual product consumption**, independent of pricing, discounts, or promotions, and accounts for differences in refill size across products.
+### 6.2 Calendar-month evaluation
+
+All windows are full calendar months (Section 4.1). No rolling day-level windows.
+
+### 6.3 Negative transactions (returns)
+
+Transaction history may contain negative-quantity transactions representing returns or refunds.
+
+* Only transactions with **positive consumable quantity / units** are included in any CRM aggregate.
+* Negative consumable transactions (returns) are excluded.
+* Original positive purchases are retained even if a corresponding return exists in another month.
+
+CRM evaluation is performed **as if returns never occurred**. This may introduce a small inaccuracy (a customer counted as active despite a later return) but is considered acceptable given the analytical scope.
+
+### 6.4 General / Anonymous customers
+
+The customer master may contain customers of type **General** (or equivalent) — walk-ins, tourists, customers without identifiable contact details. Such customers:
+
+* are included in raw transactional data,
+* are **excluded** from all CRM analysis, segmentation and lifecycle tracking.
+
+### 6.5 Measurement unit (units / volume)
+
+All consumable purchase metrics are measured in **units** (the volume / pack-size measure recorded on the product master), not in monetary value.
+
+* Each consumable product carries a `unit_size` value in the product master.
+* Transaction-level units = `quantity × unit_size`.
+* Aggregated metrics (`M*`, AMC, AOS) are sums of units across consumable transactions.
+
+This makes engagement independent of pricing, discounts and promotions, and accounts for differences in pack size across consumable SKUs.
 
 ---
+
+## 7. Summary of CRM output schema
+
+For each customer × report month, the CRM layer emits:
+
+* **Identifiers**: `customer_id`, `report_month`
+* **Base aggregates**: `M_total`, `M1`, `M6`, `M12`, `M13`, `M24`, `M25`, `O6`
+* **Derived KPIs**: `first_device_purchase_date`, `first_consumable_purchase_date`, `last_consumable_purchase_date`, `avg_monthly_consumption`, `avg_order_size`
+* **Status fields**: `activity_status`, `value_tier`, `lifecycle_event`
+
+This is the canonical output that downstream reporting (Streamlit dashboard, exports) consumes.
