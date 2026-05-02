@@ -89,6 +89,31 @@ Outputs are designed to support both operational reporting and strategic CRM ana
 
 ---
 
+## Repo Layout
+
+```
+.
+├── docs/
+│   ├── crm_calculation_logic.md       KPI + segmentation rules (source of truth)
+│   ├── source_files_specifications.md input CSV schemas
+│   └── project_requirements.md
+├── db/
+│   ├── schema.sql                     raw_* table DDL (SQLite)
+│   ├── run_crm_calculation.sql        single-month CRM calc (parameterised in tt_params)
+│   └── build.py                       multi-month build orchestrator
+├── scripts/generate_data/
+│   ├── generate.py                    seeded synthetic CSV generator
+│   ├── verify.py                      smoke-test: load → calc → print distribution
+│   └── requirements.txt
+├── app/
+│   ├── streamlit_app.py               4-tab Streamlit + Plotly dashboard
+│   └── requirements.txt
+├── CLAUDE.md                          project guide for AI assistants
+└── data/input/                        CSVs + crm.db (gitignored, rebuild locally)
+```
+
+---
+
 ## How to Run
 
 ```bash
