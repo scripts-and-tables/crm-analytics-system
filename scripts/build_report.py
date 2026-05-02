@@ -254,20 +254,38 @@ def screenshot_brand_units(brand_units, out_path):
 
 # ---------------------------------------------------------------- markdown -> html
 SPEC_TEMPLATE = """<!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
 <meta charset="utf-8">
-<title>{title} — CRM Analytics Showcase</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title} &middot; CRM Analytics</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body class="docs-page">
-<header class="docs-header">
-  <a href="../index.html" class="back-link">&larr; Back to dashboard</a>
-  <h1>{title}</h1>
+<nav class="navbar navbar-expand-lg fixed-top bg-body-tertiary border-bottom border-secondary-subtle">
+  <div class="container">
+    <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="../index.html">
+      <i class="bi bi-bar-chart-line-fill text-primary"></i>
+      <span>CRM&nbsp;Analytics</span>
+    </a>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <a class="btn btn-sm btn-outline-light" href="../index.html"><i class="bi bi-house"></i> Home</a>
+      <a class="btn btn-sm btn-primary" href="../dashboard.html">Dashboard <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</nav>
+<header class="docs-header" style="margin-top: 56px;">
+  <div class="container">
+    <a href="../index.html" class="back-link">&larr; Back to landing</a>
+    <h1>{title}</h1>
+  </div>
 </header>
 <main class="docs-body">
 {body}
 </main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 """

@@ -47,10 +47,11 @@ Full details in [`docs/specs/crm_calculation_logic.md`](docs/specs/crm_calculati
 ```
 .
 ├── docs/                              ← GitHub Pages root (source = docs/)
-│   ├── index.html                     showcase landing page (Plotly.js + vanilla JS)
+│   ├── index.html                     SaaS-style landing page (Bootstrap 5)
+│   ├── dashboard.html                 interactive dashboard (Plotly.js + Bootstrap tabs)
 │   ├── data.json                      generated CRM snapshot for the JS to consume
-│   ├── assets/{css,js}/               page styles and client-side app
-│   ├── screenshots/                   PNG previews used in README
+│   ├── assets/{css,js}/               custom theme + client-side dashboard app
+│   ├── screenshots/                   PNG previews used in README + landing page
 │   └── specs/                         markdown specs (rendered to .html alongside)
 │       ├── crm_calculation_logic.md   KPI + segmentation rules (source of truth)
 │       ├── source_files_specifications.md

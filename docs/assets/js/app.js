@@ -1,31 +1,32 @@
-// CRM Analytics Showcase — client-side app.
+// CRM Analytics dashboard — client-side app.
 // Loads docs/data.json, renders Plotly charts and a paginated/filterable customer table.
 
 const TIER_ORDER  = ["Diamond", "Platinum", "Gold", "Silver", "Bronze", "Passive"];
 const EVENT_ORDER = ["New", "Reactivated", "Lost"];
 
 const TIER_COLORS = {
-  Diamond:  "#67E8F9",
+  Diamond:  "#22D3EE",
   Platinum: "#94A3B8",
-  Gold:     "#FBBF24",
+  Gold:     "#F59E0B",
   Silver:   "#CBD5E1",
-  Bronze:   "#D97706",
-  Passive:  "#6B7280",
+  Bronze:   "#B45309",
+  Passive:  "#64748B",
 };
 const EVENT_COLORS    = { New: "#22C55E", Lost: "#EF4444", Reactivated: "#3B82F6" };
-const ACTIVITY_COLORS = { Active: "#10B981", "Not Active": "#6B7280" };
+const ACTIVITY_COLORS = { Active: "#10B981", "Not Active": "#64748B" };
 
+// Plotly layout that matches the Bootstrap dark theme used by the page.
 const DARK_LAYOUT = {
-  template:      "plotly_dark",
-  paper_bgcolor: "#1E293B",
-  plot_bgcolor:  "#1E293B",
-  font:          { color: "#E2E8F0", family: "Inter, system-ui, sans-serif", size: 12 },
+  paper_bgcolor: "rgba(0,0,0,0)",
+  plot_bgcolor:  "rgba(0,0,0,0)",
+  font:          { color: "#E2E8F0", family: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif", size: 12 },
   margin:        { l: 50, r: 20, t: 10, b: 50 },
+  xaxis:         { gridcolor: "rgba(148,163,184,0.15)", zerolinecolor: "rgba(148,163,184,0.25)" },
+  yaxis:         { gridcolor: "rgba(148,163,184,0.15)", zerolinecolor: "rgba(148,163,184,0.25)" },
 };
 
 const PAGE_SIZE = 50;
 
-// State held in this object; mutated by event handlers.
 const state = {
   data: null,
   month: null,
@@ -36,16 +37,24 @@ const state = {
 // ==================================================================== boot
 async function init() {
   try {
-    const resp = await fetch("data.json");
+    const resp = await fetch("data.json", { cache: "no-cache" });
     state.data = await resp.json();
   } catch (e) {
-    document.body.innerHTML = `<pre style="color:#fff;padding:32px">Failed to load data.json: ${e}\n\nRun: python scripts/build_report.py</pre>`;
+    document.body.innerHTML =
+      `<div class="container py-5">
+        <div class="alert alert-danger">
+          <h4 class="alert-heading">Failed to load <code>data.json</code></h4>
+          <p class="mb-0">${e}</p>
+          <hr>
+          <p class="mb-0 small">Run <code>python scripts/build_report.py</code> in the repo root.</p>
+        </div>
+      </div>`;
     return;
   }
   state.month = state.data.latest_month;
   buildMonthSelect();
   buildFilters();
-  bindTabs();
+  bindTabResize();
   bindPager();
   bindCsvDownload();
   render();
@@ -56,7 +65,6 @@ document.addEventListener("DOMContentLoaded", init);
 // ==================================================================== controls
 function buildMonthSelect() {
   const sel = document.getElementById("month-select");
-  // Reverse so newest month is at the top.
   state.data.report_months.slice().reverse().forEach(m => {
     const opt = document.createElement("option");
     opt.value = m;
@@ -79,9 +87,6 @@ function buildFilters() {
   buildChips("filter-group",    groups,                    state.filters.group);
 
   document.getElementById("filter-reset").addEventListener("click", () => {
-    // Clear in place so the closures captured by buildChips() still
-    // reference the same Set instances. Replacing the Sets would orphan
-    // the chip click handlers and silently break filtering after reset.
     state.filters.activity.clear(); state.filters.activity.add("Active");
     state.filters.tier.clear();
     state.filters.event.clear();
@@ -100,9 +105,9 @@ function buildFilters() {
 function buildChips(containerId, values, currentSet) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
-  const which = containerId.replace("filter-", "");
   values.forEach(v => {
     const chip = document.createElement("button");
+    chip.type = "button";
     chip.className = "chip" + (currentSet.has(v) ? " on" : "");
     chip.textContent = v;
     chip.dataset.value = v;
@@ -116,17 +121,16 @@ function buildChips(containerId, values, currentSet) {
   });
 }
 
-function bindTabs() {
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-      btn.classList.add("active");
-      const panel = document.getElementById("tab-" + btn.dataset.tab);
-      panel.classList.add("active");
-      // Plotly charts created while display:none keep zero width. After the
-      // tab becomes visible, ask Plotly to re-measure each chart container.
-      panel.querySelectorAll(".chart").forEach(div => {
+function bindTabResize() {
+  // Bootstrap fires `shown.bs.tab` on the activated tab button after the
+  // panel is visible. Resize any charts in the now-visible panel so Plotly
+  // re-measures their containers (charts created while display:none keep
+  // zero width forever otherwise).
+  document.querySelectorAll('[data-bs-toggle="tab"]').forEach(btn => {
+    btn.addEventListener("shown.bs.tab", () => {
+      const target = document.querySelector(btn.getAttribute("data-bs-target"));
+      if (!target) return;
+      target.querySelectorAll(".chart").forEach(div => {
         if (div._fullLayout) Plotly.Plots.resize(div);
       });
     });
@@ -149,9 +153,7 @@ function bindCsvDownload() {
     const cols = ["customer_id","name","group","city","activity","tier","event",
                   "tenure_months","amc","aos","o6","first_purchase","last_purchase"];
     const lines = [cols.join(",")];
-    rows.forEach(r => {
-      lines.push(cols.map(c => csvCell(r[c])).join(","));
-    });
+    rows.forEach(r => lines.push(cols.map(c => csvCell(r[c])).join(",")));
     const blob = new Blob([lines.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -200,7 +202,6 @@ function renderOverview() {
   document.getElementById("kpi-tenure").textContent =
     agg.avg_tenure_months !== null ? agg.avg_tenure_months.toFixed(1) : "—";
 
-  // Tier donut
   const tierData = TIER_ORDER
     .map(t => ({ tier: t, n: agg.tier_mix[t] || 0 }))
     .filter(x => x.n > 0);
@@ -214,7 +215,6 @@ function renderOverview() {
     sort: false,
   }], { ...DARK_LAYOUT, showlegend: false }, { responsive: true, displayModeBar: false });
 
-  // Events bar
   const evtData = EVENT_ORDER.map(e => ({ event: e, n: agg.events[e] || 0 }));
   Plotly.newPlot("chart-events-bar", [{
     type: "bar",
@@ -223,10 +223,9 @@ function renderOverview() {
     marker: { color: evtData.map(x => EVENT_COLORS[x.event]) },
     text: evtData.map(x => x.n.toLocaleString()),
     textposition: "outside",
-  }], { ...DARK_LAYOUT, yaxis: { title: "customers" }, showlegend: false },
+  }], { ...DARK_LAYOUT, yaxis: { ...DARK_LAYOUT.yaxis, title: "customers" }, showlegend: false },
      { responsive: true, displayModeBar: false });
 
-  // KPI table
   const tbody = document.querySelector("#kpi-table tbody");
   tbody.innerHTML = "";
   TIER_ORDER.forEach(t => {
@@ -235,11 +234,11 @@ function renderOverview() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><span class="tier-pill" data-tier="${t}">${t}</span></td>
-      <td class="num">${k.n.toLocaleString()}</td>
-      <td class="num">${k.amc !== null ? k.amc.toFixed(1) : "—"}</td>
-      <td class="num">${k.aos !== null ? k.aos.toFixed(1) : "—"}</td>
-      <td class="num">${k.o6  !== null ? k.o6.toFixed(1)  : "—"}</td>
-      <td class="num">${k.tenure !== null ? k.tenure.toFixed(1) : "—"}</td>
+      <td class="text-end">${k.n.toLocaleString()}</td>
+      <td class="text-end">${k.amc !== null ? k.amc.toFixed(1) : "—"}</td>
+      <td class="text-end">${k.aos !== null ? k.aos.toFixed(1) : "—"}</td>
+      <td class="text-end">${k.o6  !== null ? k.o6.toFixed(1)  : "—"}</td>
+      <td class="text-end">${k.tenure !== null ? k.tenure.toFixed(1) : "—"}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -249,10 +248,10 @@ function renderOverview() {
 function filteredCustomers() {
   const f = state.filters;
   return state.data.customers.filter(c => {
-    if (f.activity.size && !f.activity.has(c.activity))                return false;
-    if (f.tier.size     && (c.tier === null || !f.tier.has(c.tier)))   return false;
-    if (f.event.size    && (c.event === null || !f.event.has(c.event))) return false;
-    if (f.group.size    && !f.group.has(c.group))                      return false;
+    if (f.activity.size && !f.activity.has(c.activity))                  return false;
+    if (f.tier.size     && (c.tier === null || !f.tier.has(c.tier)))     return false;
+    if (f.event.size    && (c.event === null || !f.event.has(c.event)))  return false;
+    if (f.group.size    && !f.group.has(c.group))                        return false;
     return true;
   });
 }
@@ -271,25 +270,25 @@ function renderSegments() {
   slice.forEach(c => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="num">${c.customer_id}</td>
+      <td class="text-muted small">${c.customer_id}</td>
       <td>${escapeHtml(c.name)}</td>
       <td>${escapeHtml(c.group || "")}</td>
       <td>${escapeHtml(c.city || "")}</td>
       <td>${c.activity}</td>
       <td>${c.tier ? `<span class="tier-pill" data-tier="${c.tier}">${c.tier}</span>` : "—"}</td>
       <td>${c.event ? `<span class="event-pill" data-event="${c.event}">${c.event}</span>` : ""}</td>
-      <td class="num">${c.tenure_months !== null ? c.tenure_months : "—"}</td>
-      <td class="num">${c.amc !== null ? c.amc.toFixed(1) : "—"}</td>
-      <td class="num">${c.aos !== null ? c.aos.toFixed(1) : "—"}</td>
-      <td class="num">${c.o6}</td>
-      <td>${c.first_purchase || "—"}</td>
-      <td>${c.last_purchase  || "—"}</td>
+      <td class="text-end">${c.tenure_months !== null ? c.tenure_months : "—"}</td>
+      <td class="text-end">${c.amc !== null ? c.amc.toFixed(1) : "—"}</td>
+      <td class="text-end">${c.aos !== null ? c.aos.toFixed(1) : "—"}</td>
+      <td class="text-end">${c.o6}</td>
+      <td class="text-muted small">${c.first_purchase || "—"}</td>
+      <td class="text-muted small">${c.last_purchase  || "—"}</td>
     `;
     tbody.appendChild(tr);
   });
 
   document.getElementById("page-info").textContent =
-    `Page ${state.page + 1} of ${totalPages} (${rows.length.toLocaleString()} rows)`;
+    `Page ${state.page + 1} of ${totalPages} · ${rows.length.toLocaleString()} rows`;
   document.getElementById("page-prev").disabled = state.page === 0;
   document.getElementById("page-next").disabled = state.page >= totalPages - 1;
 }
@@ -306,7 +305,6 @@ function escapeHtml(s) {
 function renderLifecycle() {
   const months = state.data.monthly.map(m => m.month);
 
-  // Stacked tier mix
   const tierTraces = TIER_ORDER.map(t => ({
     type: "bar",
     name: t,
@@ -317,11 +315,10 @@ function renderLifecycle() {
   Plotly.newPlot("chart-tier-trend", tierTraces, {
     ...DARK_LAYOUT,
     barmode: "stack",
-    yaxis:   { title: "active customers" },
-    legend:  { orientation: "h", y: -0.18 },
+    yaxis: { ...DARK_LAYOUT.yaxis, title: "active customers" },
+    legend: { orientation: "h", y: -0.18 },
   }, { responsive: true, displayModeBar: false });
 
-  // Activity area
   const activityTraces = ["Active", "Not Active"].map(s => ({
     type: "scatter",
     mode: "lines",
@@ -334,11 +331,10 @@ function renderLifecycle() {
   }));
   Plotly.newPlot("chart-activity-trend", activityTraces, {
     ...DARK_LAYOUT,
-    yaxis:  { title: "customers" },
+    yaxis:  { ...DARK_LAYOUT.yaxis, title: "customers" },
     legend: { orientation: "h", y: -0.22 },
   }, { responsive: true, displayModeBar: false });
 
-  // Events line
   const eventTraces = EVENT_ORDER.map(e => ({
     type: "scatter",
     mode: "lines+markers",
@@ -350,7 +346,7 @@ function renderLifecycle() {
   }));
   Plotly.newPlot("chart-events-trend", eventTraces, {
     ...DARK_LAYOUT,
-    yaxis:  { title: "customers" },
+    yaxis:  { ...DARK_LAYOUT.yaxis, title: "customers" },
     legend: { orientation: "h", y: -0.22 },
   }, { responsive: true, displayModeBar: false });
 }
@@ -362,10 +358,10 @@ function renderProducts() {
     type: "bar",
     x: brand.map(b => b.brand),
     y: brand.map(b => b.units),
-    marker: { color: "#67E8F9" },
+    marker: { color: "#22D3EE" },
     text: brand.map(b => b.units.toLocaleString()),
     textposition: "outside",
-  }], { ...DARK_LAYOUT, yaxis: { title: "units" }, showlegend: false },
+  }], { ...DARK_LAYOUT, yaxis: { ...DARK_LAYOUT.yaxis, title: "units" }, showlegend: false },
      { responsive: true, displayModeBar: false });
 
   const cat = state.data.category_lines;

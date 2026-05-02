@@ -1,219 +1,391 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CRM Analytics Showcase</title>
-  <meta name="description" content="An end-to-end CRM analytics showcase: synthetic data, RFMT-based customer segmentation, and an interactive Plotly dashboard.">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js" charset="utf-8"></script>
-</head>
-<body>
+  <title>CRM Analytics — RFMT-based customer segmentation, in plain SQL</title>
+  <meta name="description" content="An end-to-end CRM analytics pipeline: synthetic data, RFMT segmentation, lifecycle events, and a static interactive dashboard. Plain SQL. Reproducible. Open source.">
 
-<header class="page-header">
-  <div class="header-inner">
-    <div>
-      <h1>CRM Analytics Showcase</h1>
-      <p class="tagline">Customer-level CRM snapshot powered by an RFMT-based segmentation pipeline. Synthetic data, fully reproducible.</p>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="landing">
+
+<!-- ============================================================ Navbar -->
+<nav class="navbar navbar-expand-lg fixed-top bg-body-tertiary border-bottom border-secondary-subtle">
+  <div class="container">
+    <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="#">
+      <i class="bi bi-bar-chart-line-fill text-primary"></i>
+      <span>CRM&nbsp;Analytics</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+        <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+        <li class="nav-item"><a class="nav-link" href="#pipeline">How it works</a></li>
+        <li class="nav-item"><a class="nav-link" href="#preview">Preview</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Docs</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="specs/crm_calculation_logic.html">Business logic</a></li>
+            <li><a class="dropdown-item" href="specs/source_files_specifications.html">Data spec</a></li>
+            <li><a class="dropdown-item" href="specs/project_requirements.html">Requirements</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">
+            <i class="bi bi-github"></i> GitHub
+          </a>
+        </li>
+        <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+          <a class="btn btn-primary px-3" href="dashboard.html">Open dashboard <i class="bi bi-arrow-right"></i></a>
+        </li>
+      </ul>
     </div>
-    <nav class="header-nav">
-      <a href="specs/crm_calculation_logic.html">Business Logic</a>
-      <a href="specs/source_files_specifications.html">Data Spec</a>
-      <a href="specs/project_requirements.html">Requirements</a>
-      <a href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">GitHub</a>
-    </nav>
   </div>
+</nav>
+
+<!-- ============================================================ Hero -->
+<header class="hero-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="badge rounded-pill text-bg-primary-subtle border border-primary-subtle text-primary-emphasis mb-3 px-3 py-2">
+          <i class="bi bi-stars me-1"></i> Synthetic-data showcase
+        </span>
+        <h1 class="display-4 fw-bold mb-3 lh-sm">
+          Turn raw transactions<br>into <span class="text-gradient">customer insights</span>.
+        </h1>
+        <p class="lead text-secondary mb-4">
+          An end-to-end CRM analytics pipeline that segments your customer base by activity,
+          value tier and lifecycle event &mdash; using nothing but SQL, a SQLite file, and a
+          static dashboard. Fully reproducible. Open source.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-primary btn-lg px-4" href="dashboard.html">
+            Open the dashboard <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+          <a class="btn btn-outline-light btn-lg px-4"
+             href="https://github.com/scripts-and-tables/crm-analytics-system"
+             target="_blank" rel="noopener">
+            <i class="bi bi-github me-1"></i> View on GitHub
+          </a>
+        </div>
+        <div class="mt-4 small text-secondary">
+          <i class="bi bi-shield-check me-1 text-success"></i>
+          MIT licensed &middot; no install required &middot; runs entirely in your browser
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="hero-preview shadow-lg">
+          <div class="hero-preview-bar">
+            <span></span><span></span><span></span>
+          </div>
+          <img src="screenshots/tier_trend.png" class="img-fluid"
+               alt="Stacked bar chart showing the active customer mix by Value Tier across 12 months">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decorative background gradient -->
+  <div class="hero-glow" aria-hidden="true"></div>
 </header>
 
-<main class="container">
-
-  <section class="intro">
-    <h2>About this project</h2>
-    <p>
-      This site is a <strong>portfolio-style showcase</strong> of a CRM analytics pipeline.
-      Three CSV inputs (customers, products, transactions) flow through a SQL calculation layer
-      that produces a per-customer monthly snapshot with three independent outputs:
-    </p>
-    <ul>
-      <li><strong>Activity Status</strong> &mdash; Active / Not Active (purchases in the last 12 calendar months).</li>
-      <li><strong>Value Tier</strong> &mdash; <em>Passive</em> (silent for &ge;6 months) overrides, then
-        <em>Diamond &rarr; Platinum &rarr; Gold &rarr; Silver &rarr; Bronze</em> based on Average Monthly Consumption,
-        Average Order Size, and order frequency.
-      </li>
-      <li><strong>Lifecycle Event</strong> &mdash; <em>New</em>, <em>Lost</em>, or <em>Reactivated</em> in the report month.</li>
-    </ul>
-    <p>
-      Detailed rules live in <a href="specs/crm_calculation_logic.html">the business-logic doc</a>.
-      All data on this page is generated by a seeded Python script &mdash; the same numbers reproduce on every clone.
-    </p>
-  </section>
-
-  <section class="month-bar">
-    <label for="month-select">Report month:</label>
-    <select id="month-select"></select>
-    <span class="month-meta" id="month-meta"></span>
-  </section>
-
-  <nav class="tab-bar" role="tablist">
-    <button class="tab-btn active" data-tab="overview">Overview</button>
-    <button class="tab-btn" data-tab="segments">Segments</button>
-    <button class="tab-btn" data-tab="lifecycle">Lifecycle Trends</button>
-    <button class="tab-btn" data-tab="products">Products</button>
-  </nav>
-
-  <!-- ============================================================ Overview -->
-  <section class="tab-panel active" id="tab-overview">
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Customers in snapshot</div>
-        <div class="kpi-value" id="kpi-total">&mdash;</div>
+<!-- ============================================================ Stat strip -->
+<section class="bg-body-tertiary border-top border-bottom border-secondary-subtle py-4">
+  <div class="container">
+    <div class="row text-center g-4">
+      <div class="col-6 col-md-3">
+        <div class="display-6 fw-bold text-primary">5,000</div>
+        <div class="text-secondary small text-uppercase">customers</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Active</div>
-        <div class="kpi-value" id="kpi-active">&mdash;</div>
-        <div class="kpi-sub" id="kpi-active-pct"></div>
+      <div class="col-6 col-md-3">
+        <div class="display-6 fw-bold text-primary">138K</div>
+        <div class="text-secondary small text-uppercase">transactions</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Lifecycle events this month</div>
-        <div class="kpi-value" id="kpi-events">&mdash;</div>
+      <div class="col-6 col-md-3">
+        <div class="display-6 fw-bold text-primary">12</div>
+        <div class="text-secondary small text-uppercase">monthly snapshots</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Avg tenure (months)</div>
-        <div class="kpi-value" id="kpi-tenure">&mdash;</div>
+      <div class="col-6 col-md-3">
+        <div class="display-6 fw-bold text-primary">6</div>
+        <div class="text-secondary small text-uppercase">value tiers</div>
       </div>
     </div>
-
-    <div class="chart-row">
-      <div class="chart-card">
-        <h3>Value Tier mix (Active customers)</h3>
-        <div id="chart-tier-donut" class="chart"></div>
-      </div>
-      <div class="chart-card">
-        <h3>Lifecycle events</h3>
-        <div id="chart-events-bar" class="chart"></div>
-      </div>
-    </div>
-
-    <div class="table-card">
-      <h3>Per-tier KPI averages</h3>
-      <table id="kpi-table" class="data-table">
-        <thead>
-          <tr>
-            <th>Tier</th>
-            <th>Customers</th>
-            <th>Avg Monthly Consumption</th>
-            <th>Avg Order Size</th>
-            <th>Avg Orders (6m)</th>
-            <th>Avg Tenure (months)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ============================================================ Segments -->
-  <section class="tab-panel" id="tab-segments">
-    <div class="filter-bar">
-      <div class="filter">
-        <label>Activity</label>
-        <div class="chip-set" id="filter-activity"></div>
-      </div>
-      <div class="filter">
-        <label>Value Tier</label>
-        <div class="chip-set" id="filter-tier"></div>
-      </div>
-      <div class="filter">
-        <label>Lifecycle Event</label>
-        <div class="chip-set" id="filter-event"></div>
-      </div>
-      <div class="filter">
-        <label>Customer Group</label>
-        <div class="chip-set" id="filter-group"></div>
-      </div>
-    </div>
-
-    <div class="filter-meta">
-      <span id="filter-count">&mdash;</span> customers match
-      &middot;
-      <button id="filter-reset" class="link-btn">reset filters</button>
-      &middot;
-      <button id="csv-download" class="link-btn">download filtered CSV</button>
-    </div>
-
-    <div class="table-card scroll">
-      <table id="customer-table" class="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Group</th>
-            <th>City</th>
-            <th>Activity</th>
-            <th>Tier</th>
-            <th>Event</th>
-            <th>Tenure</th>
-            <th>AMC</th>
-            <th>AOS</th>
-            <th>O6</th>
-            <th>First purchase</th>
-            <th>Last purchase</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div class="pager">
-      <button id="page-prev">&larr;</button>
-      <span id="page-info"></span>
-      <button id="page-next">&rarr;</button>
-    </div>
-  </section>
-
-  <!-- ============================================================ Lifecycle -->
-  <section class="tab-panel" id="tab-lifecycle">
-    <div class="chart-card">
-      <h3>Active customer mix by Value Tier (monthly)</h3>
-      <div id="chart-tier-trend" class="chart tall"></div>
-    </div>
-
-    <div class="chart-card">
-      <h3>Active vs Not Active over time</h3>
-      <div id="chart-activity-trend" class="chart"></div>
-    </div>
-
-    <div class="chart-card">
-      <h3>Lifecycle events per month</h3>
-      <div id="chart-events-trend" class="chart"></div>
-    </div>
-  </section>
-
-  <!-- ============================================================ Products -->
-  <section class="tab-panel" id="tab-products">
-    <div class="chart-row">
-      <div class="chart-card">
-        <h3>Consumable units sold by brand</h3>
-        <div id="chart-brand-units" class="chart"></div>
-      </div>
-      <div class="chart-card">
-        <h3>Transaction-line mix by category</h3>
-        <div id="chart-category-mix" class="chart"></div>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<footer class="page-footer">
-  <div>
-    Data is fully synthetic. Pipeline:
-    <code>generate.py</code> &rarr; <code>build.py</code> (SQL) &rarr; <code>build_report.py</code> &rarr; this page.
   </div>
-  <div>
-    <a href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">View source on GitHub</a>
+</section>
+
+<!-- ============================================================ Features -->
+<section id="features" class="py-5 py-lg-6">
+  <div class="container">
+    <div class="text-center mx-auto mb-5" style="max-width: 720px;">
+      <h2 class="display-6 fw-bold mb-3">Everything a CRM analyst needs, batteries included</h2>
+      <p class="lead text-secondary mb-0">
+        Three independent customer outputs &mdash; activity status, value tier, and lifecycle event &mdash;
+        derived from a transparent, well-documented set of rules.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feature-icon"><i class="bi bi-diagram-3"></i></div>
+            <h3 class="h5 mb-2">RFMT segmentation</h3>
+            <p class="text-secondary mb-0">
+              Recency, Frequency, Monetary (volume) and Tenure all surfaced as first-class fields,
+              with a Diamond&nbsp;&rarr; Bronze tier ladder driven by AMC, AOS and order frequency.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feature-icon"><i class="bi bi-arrow-repeat"></i></div>
+            <h3 class="h5 mb-2">Lifecycle events</h3>
+            <p class="text-secondary mb-0">
+              <span class="badge text-bg-success">New</span>,
+              <span class="badge text-bg-danger">Lost</span> and
+              <span class="badge text-bg-info">Reactivated</span> events derived from cumulative
+              M-fields with deterministic, mutually-exclusive rules.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feature-icon"><i class="bi bi-database-check"></i></div>
+            <h3 class="h5 mb-2">SQL-first pipeline</h3>
+            <p class="text-secondary mb-0">
+              The whole calculation is one readable SQL script. No black-box framework,
+              no proprietary DSL &mdash; just SQLite and a few CTEs anyone can audit.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feature-icon"><i class="bi bi-shuffle"></i></div>
+            <h3 class="h5 mb-2">Reproducible by design</h3>
+            <p class="text-secondary mb-0">
+              Persona-driven synthetic data with a fixed RNG seed. Every clone of the repo
+              produces the same numbers &mdash; reviewers can verify your work locally in a
+              single command.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feature-icon"><i class="bi bi-funnel"></i></div>
+            <h3 class="h5 mb-2">Filterable drill-down</h3>
+            <p class="text-secondary mb-0">
+              Slice by activity, tier, lifecycle event or customer group. Paginated table,
+              one-click CSV export of any filtered selection &mdash; all client-side.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feature-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+            <h3 class="h5 mb-2">Deploys as static HTML</h3>
+            <p class="text-secondary mb-0">
+              No server, no database connection, no API. The whole dashboard ships as a
+              JSON snapshot served from GitHub Pages &mdash; click a link, it's live.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Pipeline / How it works -->
+<section id="pipeline" class="bg-body-tertiary border-top border-bottom border-secondary-subtle py-5 py-lg-6">
+  <div class="container">
+    <div class="text-center mx-auto mb-5" style="max-width: 720px;">
+      <h2 class="display-6 fw-bold mb-3">From CSVs to a live dashboard, four steps</h2>
+      <p class="lead text-secondary mb-0">
+        Each step is a single command. Re-run end-to-end in under 30 seconds.
+      </p>
+    </div>
+
+    <div class="row g-4 align-items-stretch">
+      <div class="col-md-6 col-lg-3">
+        <div class="step-card h-100">
+          <div class="step-num">1</div>
+          <i class="bi bi-people-fill step-icon"></i>
+          <h3 class="h6 fw-semibold">Generate</h3>
+          <p class="small text-secondary mb-0">
+            Persona-driven synthetic CSVs &mdash; customers, products, transactions.
+            5,000 customers across 10 personas covering every CRM segment.
+          </p>
+          <code class="d-block mt-3 small text-info">python scripts/generate_data/generate.py</code>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-card h-100">
+          <div class="step-num">2</div>
+          <i class="bi bi-database-fill step-icon"></i>
+          <h3 class="h6 fw-semibold">Build</h3>
+          <p class="small text-secondary mb-0">
+            Apply the schema, load the CSVs, run the calculation SQL once per report month
+            for the last 12 months and accumulate the snapshots.
+          </p>
+          <code class="d-block mt-3 small text-info">python db/build.py</code>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-card h-100">
+          <div class="step-num">3</div>
+          <i class="bi bi-file-earmark-code-fill step-icon"></i>
+          <h3 class="h6 fw-semibold">Export</h3>
+          <p class="small text-secondary mb-0">
+            Aggregate the snapshot into a small JSON payload, pre-render PNG previews and
+            convert each markdown spec to HTML.
+          </p>
+          <code class="d-block mt-3 small text-info">python scripts/build_report.py</code>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-card h-100">
+          <div class="step-num">4</div>
+          <i class="bi bi-eye-fill step-icon"></i>
+          <h3 class="h6 fw-semibold">Explore</h3>
+          <p class="small text-secondary mb-0">
+            Open the dashboard. Switch report months, filter customers, drill down,
+            export a CSV &mdash; all without a server.
+          </p>
+          <a href="dashboard.html" class="btn btn-sm btn-outline-primary mt-3">
+            Open the dashboard <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Preview -->
+<section id="preview" class="py-5 py-lg-6">
+  <div class="container">
+    <div class="text-center mx-auto mb-5" style="max-width: 720px;">
+      <h2 class="display-6 fw-bold mb-3">A look inside</h2>
+      <p class="lead text-secondary mb-0">
+        Four built-in views &mdash; click <em>Open dashboard</em> to interact with the live data.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <figure class="preview-card">
+          <img src="screenshots/tier_mix.png" class="img-fluid" alt="Donut chart of value tier mix">
+          <figcaption>
+            <strong>Tier mix</strong>
+            <span class="text-secondary">&middot; current-month split of active customers across the value-tier ladder.</span>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="col-lg-6">
+        <figure class="preview-card">
+          <img src="screenshots/events_bar.png" class="img-fluid" alt="Bar chart of lifecycle events">
+          <figcaption>
+            <strong>Lifecycle events</strong>
+            <span class="text-secondary">&middot; New / Reactivated / Lost counts in the report month.</span>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="col-lg-6">
+        <figure class="preview-card">
+          <img src="screenshots/tier_trend.png" class="img-fluid" alt="Stacked bar chart of tier mix over months">
+          <figcaption>
+            <strong>Tier trend</strong>
+            <span class="text-secondary">&middot; how the active base shifts between tiers month over month.</span>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="col-lg-6">
+        <figure class="preview-card">
+          <img src="screenshots/events_trend.png" class="img-fluid" alt="Line chart of lifecycle events over months">
+          <figcaption>
+            <strong>Lifecycle trends</strong>
+            <span class="text-secondary">&middot; New, Reactivated and Lost cohorts tracked across 12 months.</span>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Final CTA -->
+<section class="py-5 py-lg-6 cta-section">
+  <div class="container text-center">
+    <h2 class="display-6 fw-bold mb-3">Ready to dig in?</h2>
+    <p class="lead text-secondary mb-4 mx-auto" style="max-width: 640px;">
+      Open the live dashboard, browse the source on GitHub, or read the business logic that drives every KPI.
+    </p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+      <a class="btn btn-primary btn-lg px-4" href="dashboard.html">
+        Open the dashboard <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+      <a class="btn btn-outline-light btn-lg px-4"
+         href="specs/crm_calculation_logic.html">
+        <i class="bi bi-book me-1"></i> Read the docs
+      </a>
+      <a class="btn btn-outline-light btn-lg px-4"
+         href="https://github.com/scripts-and-tables/crm-analytics-system"
+         target="_blank" rel="noopener">
+        <i class="bi bi-github me-1"></i> Star on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ Footer -->
+<footer class="border-top border-secondary-subtle py-4 small text-secondary">
+  <div class="container">
+    <div class="row align-items-center g-3">
+      <div class="col-md-6">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-bar-chart-line-fill text-primary"></i>
+          <span class="fw-semibold text-light">CRM Analytics</span>
+          <span class="text-secondary">&middot; MIT licensed</span>
+        </div>
+        <div class="mt-2">
+          Built with <a href="https://plotly.com/javascript/" target="_blank" rel="noopener">Plotly.js</a>,
+          <a href="https://getbootstrap.com" target="_blank" rel="noopener">Bootstrap</a> and SQLite.
+          All data is synthetic.
+        </div>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <a class="text-secondary me-3" href="specs/crm_calculation_logic.html">Business logic</a>
+        <a class="text-secondary me-3" href="specs/source_files_specifications.html">Data spec</a>
+        <a class="text-secondary" href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">
+          <i class="bi bi-github"></i> GitHub
+        </a>
+      </div>
+    </div>
   </div>
 </footer>
 
-<script src="assets/js/app.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
