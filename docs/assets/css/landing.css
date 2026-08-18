@@ -281,6 +281,66 @@ h2 { margin-top: 14px; font-size: clamp(28px, 3.9vw, 40px); }
 .card h3 { font-size: 20px; margin-bottom: 10px; }
 .card p { color: var(--ink-2); font-size: 15.5px; }
 
+/* ── research / evidence cards ──────────────────────────────────────────
+   Source attribution, NOT a client wall. The institution marks are set in
+   this site's own type and palette rather than reproducing anybody's logo:
+   the marks here are trademarks of organisations that have no connection to
+   this project, and borrowing their artwork on a page that reads as a product
+   pitch would imply an endorsement that does not exist. A checkable quote is
+   the credibility; the mark is only there to make the source scannable. */
+
+.research { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .research { grid-template-columns: 1fr; } }
+
+.rcard {
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 28px 26px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: transform .2s cubic-bezier(.22,.7,.3,1), box-shadow .2s, border-color .2s;
+}
+.rcard:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: #D8D2C0; }
+
+.rsource { display: flex; align-items: center; gap: 13px; margin-bottom: 20px; }
+.rmark {
+  flex-shrink: 0; width: 52px; height: 52px; border-radius: 13px;
+  display: grid; place-items: center; text-align: center;
+  border: 1px solid var(--line); background: var(--bg-warm);
+  font-weight: 700; letter-spacing: .01em; color: var(--brand);
+  line-height: 1;
+}
+.rmark.wide { font-size: 13px; }
+.rmark.tall { font-size: 19px; }
+.rsource-name { font-size: 15px; font-weight: 650; line-height: 1.25; }
+.rsource-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; line-height: 1.35; }
+
+.rquote {
+  font-size: 17px; line-height: 1.55; color: var(--ink);
+  margin: 0 0 18px; position: relative; padding-left: 16px;
+  border-left: 3px solid var(--gold-2);
+}
+.rquote em { font-style: normal; background: linear-gradient(transparent 62%, rgba(217,174,98,.35) 0); }
+
+.rstat { display: flex; gap: 26px; flex-wrap: wrap; margin: 0 0 18px; }
+.rstat div b {
+  display: block; font-size: 27px; font-weight: 700; letter-spacing: -.03em;
+  color: var(--brand); font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.rstat div span { display: block; font-size: 13px; color: var(--ink-2); margin-top: 4px; max-width: 22ch; }
+
+.rcite {
+  margin-top: auto; padding-top: 16px; border-top: 1px solid var(--line-2);
+  font-size: 13px; color: var(--ink-3); line-height: 1.5;
+}
+.rcite a { font-weight: 600; white-space: nowrap; }
+.rcite a:hover { text-decoration: underline; }
+
+.rnote {
+  margin-top: 26px; text-align: center;
+  font-size: 13.5px; color: var(--ink-3); max-width: 74ch;
+  margin-left: auto; margin-right: auto;
+}
+
 /* ── split feature block ── */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
 @media (max-width: 940px) { .split { grid-template-columns: 1fr; gap: 40px; } }
