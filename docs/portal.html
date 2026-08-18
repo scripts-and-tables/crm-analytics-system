@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Al Waha · Client Intelligence — CRM portal demo</title>
+<meta name="description" content="Interactive CRM portal prototype: client base by size category, status trends, boutique comparison, data sources and audit log. Entirely fictional demonstration data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="crm/styles.css">
+</head>
+<body data-density="regular">
+
+<!-- Fictional-data strip. Outside #root on purpose: it is present before React
+     boots and cannot be unmounted by anything the app does. The portal is
+     deliberately convincing, so the one thing it must never do is let a visitor
+     believe the company, the clients or the money are real. -->
+<div class="demo-strip" role="note">
+  <span class="demo-dot"></span>
+  <b>Fictional demo.</b>
+  <span class="demo-long">Al Waha Gourmet does not exist. Every client, order, amount, staff member and log entry below is generated sample data.</span>
+  <span class="demo-short">All data on this page is generated sample data.</span>
+  <a href="index.html">CRM Analytics project &rsaquo;</a>
+</div>
+
+<div id="root"></div>
+
+<!-- React, production builds, served from this origin. Vendored rather than
+     CDN-loaded so the page costs no third-party DNS + TLS handshake before it
+     can run, and keeps working if the CDN does not. -->
+<script src="vendor/react.js" defer></script>
+<script src="vendor/react-dom.js" defer></script>
+
+<!-- The whole app, precompiled by scripts/build_portal.py from the .jsx
+     sources next to this file. The prototype shipped @babel/standalone and
+     transpiled nine files in the browser on every load; this is the same code
+     with the compiler left behind. `defer` on all three keeps execution in
+     document order while none of them block the parser. -->
+<script src="portal.bundle.js" defer></script>
+</body>
+</html>
