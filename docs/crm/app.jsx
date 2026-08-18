@@ -134,9 +134,40 @@ function useHandheld(query = "(max-width: 860px)") {
   return is;
 }
 
+// Shown in the gap between "the app is on screen" and "the data exists".
+// In practice a signed-out visitor never sees it: generation starts on the
+// first frame and finishes long before anyone has typed an email.
+function Preparing() {
+  return (
+    <div className="prep">
+      <span className="brand-mark">AW</span>
+      <p>Preparing the client base…</p>
+      <span className="prep-sub">2,000 clients · 100,017 purchases, generated in your browser</span>
+    </div>
+  );
+}
+
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const handheld = useHandheld();
+
+  // THE PAGE PAINTS FIRST, THE DATA ARRIVES SECOND.
+  //
+  // Building the dataset costs ~265 ms on a laptop and ~2.2 s on a mid-range
+  // phone. Run at import — which is where it used to be — that time is spent
+  // on a blank white page before React has mounted anything. Run after the
+  // first frame, it is spent behind the sign-in screen, while the visitor
+  // reads it. The work is identical; only who waits for it changes.
+  const [dataReady, setDataReady] = useState(() => !!CRM.ready);
+  useEffect(() => {
+    if (CRM.ready) return;
+    let cancelled = false;
+    const run = () => { if (!cancelled) { CRM.generate(); setDataReady(true); } };
+    // Two frames, not one: the first commits the DOM, the second lets the
+    // browser actually paint it before the main thread is taken for a second.
+    const id = requestAnimationFrame(() => requestAnimationFrame(run));
+    return () => { cancelled = true; cancelAnimationFrame(id); };
+  }, []);
   const [session, setSession] = useState(() => {
     try { return JSON.parse(localStorage.getItem("alwaha_session")) || null; } catch { return null; }
   });
@@ -214,7 +245,9 @@ function App() {
       <React.Fragment>
         {needsAuth ? authContent : (
           <div className="phone-app is-live">
-            <MobileChrome route={route} go={go} me={me} signOut={signOut} t={t} />
+            {dataReady
+              ? <MobileChrome route={route} go={go} me={me} signOut={signOut} t={t} />
+              : <Preparing />}
           </div>
         )}
         {tweaks}
@@ -295,7 +328,9 @@ function App() {
       </nav>
 
       <main className="main">
-        <Screen params={route.params} go={go} activeDays={t.activeDays} email={email} onSignOut={signOut} />
+        {dataReady
+          ? <Screen params={route.params} go={go} activeDays={t.activeDays} email={email} onSignOut={signOut} />
+          : <Preparing />}
       </main>
 
       {tweaks}

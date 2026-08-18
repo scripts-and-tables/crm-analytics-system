@@ -422,6 +422,20 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
 .phone-app .chip-group { gap: 4px; }
 .phone-app .chip { padding: 6px 10px; font-size: 11.5px; }
 
+/* ── "preparing" state ───────────────────────────────── */
+/* The moment between the app painting and the dataset existing. It is styled
+   as a calm placeholder rather than a spinner because it is usually gone in
+   a quarter of a second — a spinner that flashes reads as a fault. */
+.prep {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; min-height: 60vh; text-align: center; padding: 40px 20px;
+  animation: prep-in .5s .25s both;
+}
+@keyframes prep-in { from { opacity: 0; } }
+.prep .brand-mark { width: 52px; height: 52px; font-size: 20px; border-color: var(--accent-2); }
+.prep p { font-family: "Cormorant Garamond", serif; font-size: 23px; font-weight: 600; color: var(--ink); }
+.prep-sub { font-size: 12.5px; color: var(--muted); }
+
 /* ── Status pill + opt-ins ───────────────────────────── */
 .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
 .status-pill i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }

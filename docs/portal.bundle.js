@@ -59,6 +59,25 @@
   //: days-ago for a day index (0 = oldest, HISTORY_DAYS = today)
   const daysAgo = (d) => HISTORY_DAYS - d;
 
+  // The 18 months ending with the last COMPLETE one. Today is the 10th, so
+  // the current month holds a third of its trade; including it would put a
+  // partial month next to a full one and report a 70% revenue collapse that
+  // is only a calendar artefact. Recency still uses the real date — this
+  // window is for the monthly series alone.
+  const MONTH_KEYS = [];
+  for (let k = 17; k >= 0; k--) {
+    const d = new Date(Date.UTC(2026, 4 - k, 1));   // ... through May 2026
+    MONTH_KEYS.push(d.getUTCFullYear() * 12 + d.getUTCMonth());
+  }
+  const MONTHS = MONTH_KEYS.map((key, i) => {
+    const y = Math.floor(key / 12), m = key % 12;
+    return MN[m] + (m === 0 || i === 0 ? " ’" + String(y).slice(2) : "");
+  });
+  const monthIndex = (day) => {
+    const d = dayToDate(day);
+    return MONTH_KEYS.indexOf(d.getUTCFullYear() * 12 + d.getUTCMonth());
+  };
+
   // ── vocabularies ───────────────────────────────────────────────
   const FIRST = ["Mariam", "Ahmed", "Fatima", "Khalid", "Noora", "Saeed", "Aisha", "Omar", "Hessa", "Rashid", "Layla", "Hamdan", "Salama", "Yousef", "Reem", "Majid", "Shamma", "Tariq", "Alia", "Faisal", "Priya", "Arjun", "Elena", "Sophie", "James", "Chen", "Anastasia", "Marco", "Yuki", "Daniel", "Nadia", "Karim", "Leila", "Samir", "Zara", "Idris", "Amina", "Hassan", "Dana", "Bilal", "Mei", "Ivan", "Clara", "Pierre", "Sanjay", "Ana", "Tomas", "Farah", "Nour", "Rami"];
   const LAST = ["Al Maktoum", "Al Falasi", "Al Suwaidi", "Al Mansoori", "Al Shamsi", "Al Marri", "Al Qubaisi", "Al Hammadi", "Al Zaabi", "Al Nuaimi", "Sharma", "Patel", "Petrova", "Laurent", "Whitfield", "Wang", "Volkova", "Rossi", "Tanaka", "Okonkwo", "Haddad", "Farouk", "Menon", "Costa", "Nguyen", "Silva", "Kovac", "Ahmed", "Iqbal", "Nasser"];
@@ -115,6 +134,23 @@
   ];
   const P_CUM = (() => { let a = 0; return PERSONAS.map((p) => (a += p.w)); })();
   const pickPersona = () => { const u = rnd() * P_CUM[P_CUM.length - 1]; for (let i = 0; i < P_CUM.length; i++) if (u <= P_CUM[i]) return PERSONAS[i]; return PERSONAS[3]; };
+
+  // ══════════════════════════════════════════════════════════════════════
+  // THE EXPENSIVE HALF, deliberately not run on import.
+  //
+  // Building 2,000 clients and 100,017 purchases costs ~265 ms on a laptop
+  // and ~2.2 s on a mid-range phone, and it used to run before React mounted
+  // — so the visitor stared at a blank page for all of it. The sign-in screen
+  // needs none of this data. `generate()` lets the app paint first and do the
+  // work afterwards, behind the several seconds a person spends typing an
+  // email and a six-digit code.
+  //
+  // The RNG is untouched by the split: nothing above consumes a draw, so the
+  // sequence — and therefore the dataset — is identical to before.
+  // ══════════════════════════════════════════════════════════════════════
+  function generate() {
+    if (CRM.ready) return CRM;            // idempotent: a second call would
+    const T1 = (window.performance || Date).now();   // reseed nothing and lie
 
   // ── pass 1: clients, and how many orders each will place ───────
   const clients = [];
@@ -216,24 +252,6 @@
   // ── pass 3: derive every client figure from their transactions ─
   const CUT_12M = HISTORY_DAYS - 365;       // start of the trailing year
   const CUT_24M = 0;
-  // The 18 months ending with the last COMPLETE one. Today is the 10th, so
-  // the current month holds a third of its trade; including it would put a
-  // partial month next to a full one and report a 70% revenue collapse that
-  // is only a calendar artefact. Recency still uses the real date — this
-  // window is for the monthly series alone.
-  const MONTH_KEYS = [];
-  for (let k = 17; k >= 0; k--) {
-    const d = new Date(Date.UTC(2026, 4 - k, 1));   // ... through May 2026
-    MONTH_KEYS.push(d.getUTCFullYear() * 12 + d.getUTCMonth());
-  }
-  const MONTHS = MONTH_KEYS.map((key, i) => {
-    const y = Math.floor(key / 12), m = key % 12;
-    return MN[m] + (m === 0 || i === 0 ? " ’" + String(y).slice(2) : "");
-  });
-  const monthIndex = (day) => {
-    const d = dayToDate(day);
-    return MONTH_KEYS.indexOf(d.getUTCFullYear() * 12 + d.getUTCMonth());
-  };
 
   const revenueSeries = new Array(18).fill(0);
   const ordersSeries = new Array(18).fill(0);
@@ -336,6 +354,37 @@
     generatedMs: 0,
   };
 
+    // ── the order history of one client, newest first ────────────
+    // Objects are built only for the rows actually asked for. A drawer shows
+    // eight; inflating a hundred thousand rows to hand back eight would undo
+    // the reason the transactions are in typed arrays at all.
+    function ordersFor(client, limit) {
+      const rows = byClient[client.row] || [];
+      const take = Math.min(limit || 20, rows.length);
+      const out = new Array(take);
+      for (let k = 0; k < take; k++) {
+        const r = rows[rows.length - 1 - k];             // newest first
+        out[k] = {
+          date: fmtDate(dayToDate(sDay[r])),
+          daysAgo: daysAgo(sDay[r]),
+          amount: Math.round(sAmount[r]),
+          location: LOCATIONS[sLoc[r]].name,
+          product: PRODUCTS[sProduct[r]],
+        };
+      }
+      return out;
+    }
+
+    Object.assign(CRM, {
+      clients, locStats, revenueSeries: revenueK, activeSeries, newSeries,
+      churnSeries, TRANSITIONS, KPI, ordersFor,
+      tx: { n: total, client: sClient, day: sDay, amount: sAmount, loc: sLoc, product: sProduct },
+      ready: true,
+    });
+    CRM.KPI.generatedMs = Math.round((window.performance || Date).now() - T1);
+    return CRM;
+  }
+
   // ── team, uploads, audit trail, exports ────────────────────────
   const TEAM = [
     { id: "u1", name: "Sara Khalifa", role: "CRM Lead", email: "sara.k@alwaha.example" },
@@ -378,36 +427,32 @@
     { name: "Boutique performance", format: "XLSX", range: "May 2026", by: "Sara Khalifa", date: "1 Jun 2026", size: "204 KB" },
   ];
 
-  // ── the order history of one client, newest first ──────────────
-  // Objects are built only for the rows actually asked for. A drawer shows
-  // twenty; inflating a hundred thousand rows to hand back twenty would undo
-  // the reason the transactions are in typed arrays at all.
-  function ordersFor(client, limit) {
-    const rows = byClient[client.row] || [];
-    const take = Math.min(limit || 20, rows.length);
-    const out = new Array(take);
-    for (let k = 0; k < take; k++) {
-      const r = rows[rows.length - 1 - k];               // newest first
-      out[k] = {
-        date: fmtDate(dayToDate(sDay[r])),
-        daysAgo: daysAgo(sDay[r]),
-        amount: Math.round(sAmount[r]),
-        location: LOCATIONS[sLoc[r]].name,
-        product: PRODUCTS[sProduct[r]],
-      };
-    }
-    return out;
-  }
-
-  KPI.generatedMs = Math.round((window.performance || Date).now() - T0);
-
   window.CRM = {
-    clients, LOCATIONS, locStats, SEGMENTS, SEG_META, TIER_MIN, TYPES, MONTHS,
-    revenueSeries: revenueK, activeSeries, newSeries, churnSeries,
-    TRANSITIONS, PRODUCTS, TEAM, UPLOADS, AUDIT, EXPORTS, KPI, ordersFor,
-    // raw transactions, for anything that wants to read them
-    tx: { n: total, client: sClient, day: sDay, amount: sAmount, loc: sLoc, product: sProduct },
+    // ── available the instant this file runs ───────────────────────
+    // Constants and fixtures only. The sign-in screen, the nav and the app
+    // shell need exactly this much and no more, which is what lets the page
+    // paint before a single client exists.
+    LOCATIONS, SEGMENTS, SEG_META, TIER_MIN, TYPES, MONTHS, PRODUCTS,
+    TEAM, UPLOADS, AUDIT, EXPORTS,
+
+    // ── filled in by generate() ────────────────────────────────────
+    // Empty rather than undefined: anything that reads these before the data
+    // lands gets a well-formed nothing — an empty list, a zeroed KPI — and
+    // renders "no rows" instead of throwing.
+    ready: false,
+    generate,
+    clients: [],
+    locStats: [],
+    revenueSeries: [], activeSeries: [], newSeries: [], churnSeries: [],
+    TRANSITIONS: {},
+    KPI: { clients: 0, transactions: 0, revenue12m: 0, orders12m: 0,
+           avgBasket: 0, activeNow: 0, revenueLastMonth: 0, generatedMs: 0 },
+    ordersFor: () => [],
+    tx: { n: 0 },
+    // How long this file took to define itself — the cheap half.
+    bootMs: Math.round((window.performance || Date).now() - T0),
   };
+  const CRM = window.CRM;
 })();
 
 })();
@@ -4077,9 +4122,48 @@ function useHandheld(query = "(max-width: 860px)") {
   }, [query]);
   return is;
 }
+
+// Shown in the gap between "the app is on screen" and "the data exists".
+// In practice a signed-out visitor never sees it: generation starts on the
+// first frame and finishes long before anyone has typed an email.
+function Preparing() {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "prep"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "brand-mark"
+  }, "AW"), /*#__PURE__*/React.createElement("p", null, "Preparing the client base\u2026"), /*#__PURE__*/React.createElement("span", {
+    className: "prep-sub"
+  }, "2,000 clients \xB7 100,017 purchases, generated in your browser"));
+}
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const handheld = useHandheld();
+
+  // THE PAGE PAINTS FIRST, THE DATA ARRIVES SECOND.
+  //
+  // Building the dataset costs ~265 ms on a laptop and ~2.2 s on a mid-range
+  // phone. Run at import — which is where it used to be — that time is spent
+  // on a blank white page before React has mounted anything. Run after the
+  // first frame, it is spent behind the sign-in screen, while the visitor
+  // reads it. The work is identical; only who waits for it changes.
+  const [dataReady, setDataReady] = useState(() => !!CRM.ready);
+  useEffect(() => {
+    if (CRM.ready) return;
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) {
+        CRM.generate();
+        setDataReady(true);
+      }
+    };
+    // Two frames, not one: the first commits the DOM, the second lets the
+    // browser actually paint it before the main thread is taken for a second.
+    const id = requestAnimationFrame(() => requestAnimationFrame(run));
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id);
+    };
+  }, []);
   const [session, setSession] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("alwaha_session")) || null;
@@ -4199,13 +4283,13 @@ function App() {
   if (handheld) {
     return /*#__PURE__*/React.createElement(React.Fragment, null, needsAuth ? authContent : /*#__PURE__*/React.createElement("div", {
       className: "phone-app is-live"
-    }, /*#__PURE__*/React.createElement(MobileChrome, {
+    }, dataReady ? /*#__PURE__*/React.createElement(MobileChrome, {
       route: route,
       go: go,
       me: me,
       signOut: signOut,
       t: t
-    })), tweaks);
+    }) : /*#__PURE__*/React.createElement(Preparing, null)), tweaks);
   }
 
   // ── Mobile PREVIEW (desktop only) ─────────────────────────────
@@ -4294,13 +4378,13 @@ function App() {
     size: 16
   }))))), /*#__PURE__*/React.createElement("main", {
     className: "main"
-  }, /*#__PURE__*/React.createElement(Screen, {
+  }, dataReady ? /*#__PURE__*/React.createElement(Screen, {
     params: route.params,
     go: go,
     activeDays: t.activeDays,
     email: email,
     onSignOut: signOut
-  })), tweaks);
+  }) : /*#__PURE__*/React.createElement(Preparing, null)), tweaks);
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
 })();
