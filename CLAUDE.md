@@ -99,6 +99,7 @@ docs/index.html  (committed, served by GitHub Pages)
 ## Key Files
 
 - `docs/specs/crm_calculation_logic.md` — **source of truth.** Defines the M-fields (M1/M6/M12/M13/M24/M25/O6), the Activity Status / Value Tier / Lifecycle Event outputs, and every edge-case rule (returns excluded, anonymous customers excluded, calendar-month windows, top-down precedence). Read this before touching SQL.
+- `docs/specs/evidence_base.md` — **why the rules are what they are.** Traces each segmentation rule to a published source (Ascarza et al. 2018; Fader/Hardie 2005, 2009; PwC 2025; EY 2025) or marks it plainly as our own choice, and records the two widely-quoted statistics this project refuses to repeat. When a KPI rule changes, this file changes with it: a rule with no entry here is a rule nobody has justified. Adding a source means checking it, not citing it from memory.
 - `db/run_crm_calculation.sql` — implements the doc. The `tt_params` CTE at the top holds the report month and the calibration thresholds. The pipeline runs `tt_params → tt_dates → tt_first_device_date → tt_consumable_lines → tt_base_aggregates → crm_customer_snapshot`.
 - `db/build.py` — the only place that knows about multi-month orchestration. Patches the report-month string in `run_crm_calculation.sql` once per iteration via regex (`REPORT_MONTH_PATTERN`). If the SQL's `tt_params` shape changes, update the regex.
 - `scripts/build_report.py` — the bridge between SQL and the static site. `fetch_aggregates()` defines the JSON shape; the `screenshot_*` functions define what gets rendered as PNG; `render_specs()` converts each `docs/specs/*.md` to a styled `*.html`.
@@ -140,7 +141,7 @@ Build options: `python db/build.py --db <path> --months <N> --latest YYYY-MM-DD`
 
 ## Important Rules for Claude
 
-- **Always read `docs/specs/crm_calculation_logic.md` before changing any KPI rule** in the SQL or the dashboard.
+- **Always read `docs/specs/crm_calculation_logic.md` before changing any KPI rule** in the SQL or the dashboard, and record the justification in `docs/specs/evidence_base.md` — a source that was actually fetched and read, or an honest "this is our choice". Never cite a paper from memory, and never quote a statistic without its primary source and its date.
 - **Never commit raw input artifacts** (`data/input/*.csv`, `data/input/crm.db`). They are gitignored.
 - **Do commit derived `docs/` artifacts** (`docs/data.json`, `docs/screenshots/*.png`, `docs/specs/*.html`) — Pages serves them.
 - **Don't drop or rewrite `data/input/data_sample.db`** (a 47 MB legacy SQLite tracked from before this project) without explicit user approval.

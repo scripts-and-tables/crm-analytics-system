@@ -11,6 +11,8 @@ All data is synthetic and fully reproducible from a seeded Python script.
 ## What's in this repo
 
 * a documented business-logic specification (`docs/specs/crm_calculation_logic.md`)
+* an evidence base (`docs/specs/evidence_base.md`) tracing every segmentation rule to a
+  published source — or marking it plainly as our own choice
 * a SQLite schema and a single-month CRM calculation in plain SQL
 * a multi-month build orchestrator that produces a per-customer × per-month snapshot
 * a persona-driven synthetic-data generator (every CRM segment / lifecycle event populated by construction)
