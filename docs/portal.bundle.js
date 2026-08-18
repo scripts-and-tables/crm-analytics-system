@@ -3769,8 +3769,34 @@ function MobileChrome({
     d: "M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
   }), "Sign out"))));
 }
+
+// Is this an actual small screen, as opposed to a desktop previewing one?
+//
+// The distinction matters because "mobile" in this app meant two different
+// things. The PC/Mobile switch is a DESIGN PREVIEW: it draws the phone layout
+// inside a simulated iPhone so the two can be compared on one desktop screen.
+// A real phone needs the same layout with none of the pretence — no bezel, no
+// status bar, no toggle offering to go back to a desktop layout that does not
+// fit. Without this the app fell back to the desktop shell, whose narrowest
+// breakpoint is 1100px, so a 412px phone got the 232px sidebar and ~85px KPI
+// columns.
+function useHandheld(query = "(max-width: 860px)") {
+  const [is, setIs] = useState(() => typeof window.matchMedia === "function" && window.matchMedia(query).matches);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia(query);
+    const on = e => setIs(e.matches);
+    // addListener is the pre-2019 Safari spelling; still worth the two lines.
+    if (mq.addEventListener) mq.addEventListener("change", on);else mq.addListener(on);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", on);else mq.removeListener(on);
+    };
+  }, [query]);
+  return is;
+}
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const handheld = useHandheld();
   const [session, setSession] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("alwaha_session")) || null;
@@ -3808,7 +3834,8 @@ function App() {
     r.setProperty("--radius", t.radius + "px");
     document.body.dataset.density = t.density;
     document.body.dataset.view = view;
-  }, [t, view]);
+    document.body.dataset.device = handheld ? "handheld" : "desktop";
+  }, [t, view, handheld]);
   const signIn = email => {
     const s = {
       email,
@@ -3882,7 +3909,23 @@ function App() {
   const email = session ? session.email : "sara.k@alwaha.example";
   const me = CRM.TEAM.find(u => u.email === email) || CRM.TEAM[0];
 
-  // ── Mobile view ───────────────────────────────────────────────
+  // ── Real handheld ─────────────────────────────────────────────
+  // The phone layout, full-bleed. `phone-app` carries every mobile content
+  // adaptation in the stylesheet, so it is kept; `is-live` is what tells the
+  // CSS there is no simulated device around it to leave room for.
+  if (handheld) {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, needsAuth ? authContent : /*#__PURE__*/React.createElement("div", {
+      className: "phone-app is-live"
+    }, /*#__PURE__*/React.createElement(MobileChrome, {
+      route: route,
+      go: go,
+      me: me,
+      signOut: signOut,
+      t: t
+    })), tweaks);
+  }
+
+  // ── Mobile PREVIEW (desktop only) ─────────────────────────────
   if (view === "mobile") {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "mobile-stage",

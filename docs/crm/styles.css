@@ -596,3 +596,58 @@ body { padding-top: var(--demo-h); }
    it — the mobile stage is already offset, and this keeps the sheet aligned to
    the phone rather than to the page. */
 .phone-app .auth-stage { min-height: 100%; }
+
+/* The band has to survive a 360px screen. Its own text may ellipsize; the
+   label and the link may not, because those are the parts that carry the
+   warning. Below 560px the sentence goes entirely and the label stands alone
+   rather than wrapping the band to two lines. */
+@media (max-width: 860px) {
+  .demo-strip { padding: 0 10px; gap: 6px; font-size: 11px; }
+  .demo-strip b { white-space: nowrap; }
+}
+@media (max-width: 560px) {
+  .demo-strip .demo-short { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   A real handheld — the phone layout with the pretence removed
+   ══════════════════════════════════════════════════════════════════════════
+   `.phone-app` on its own means "the phone layout, drawn inside the simulated
+   device on the preview stage", and its padding is sized for that device's
+   status bar and home indicator. `.is-live` means the same layout IS the page:
+   it fills the viewport under the fictional-data band, and the space that was
+   reserved for drawn iOS chrome is given back to the real chrome via the
+   safe-area insets. */
+
+.phone-app.is-live {
+  height: calc(100vh - var(--demo-h));
+  height: calc(100dvh - var(--demo-h));   /* dvh where supported: mobile
+                                             browsers grow and shrink 100vh as
+                                             the address bar hides */
+  width: 100%;
+}
+
+/* 64px of top padding existed to clear a drawn status bar and dynamic island.
+   On a real phone the browser's own chrome is already above us — all that is
+   owed here is the safe area, on a notched device in landscape. */
+.phone-app.is-live .m-topbar {
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
+}
+.phone-app.is-live .m-main {
+  padding: 14px 12px 24px;
+  -webkit-overflow-scrolling: touch;
+}
+/* Likewise the 30px below the tab bar was room for a drawn home indicator; the
+   real one is reported by the safe-area inset, and is 0 on a phone without. */
+.phone-app.is-live .m-tabs {
+  padding: 7px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+/* Signed out on a real phone: the card fills the screen instead of floating on
+   a stage sized for a desktop window. */
+body[data-device="handheld"] .auth-stage {
+  min-height: calc(100vh - var(--demo-h));
+  min-height: calc(100dvh - var(--demo-h));
+  padding: 20px 16px;
+}
+body[data-device="handheld"] .auth-card { padding: 26px 22px; }
+body[data-device="handheld"] .otp { width: 40px; height: 48px; font-size: 19px; }
