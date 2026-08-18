@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CRM Analytics System — customer segmentation, end to end</title>
-<meta name="description" content="A portfolio build: a seeded synthetic data generator, an RFMT segmentation pipeline written in plain SQL, and an interactive client-intelligence portal you can open in one click. All data is fictional.">
-<meta name="theme-color" content="#0B1120">
+<title>CRM Analytics — know where your revenue actually comes from</title>
+<meta name="description" content="Sort your customer base into value tiers, watch who moves between them, and catch the ones slipping away. Open the live demo — no signup, fictional data throughout.">
+<meta name="theme-color" content="#FBFAF7">
 
-<meta property="og:title" content="CRM Analytics System">
-<meta property="og:description" content="From raw transactions to a working CRM front office — generator, SQL pipeline, and a live portal. Fictional data throughout.">
+<meta property="og:title" content="CRM Analytics — know where your revenue actually comes from">
+<meta property="og:description" content="Value tiers, lifecycle events and a client-intelligence portal you can open in one click. A portfolio build on fictional data.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="screenshots/portal-overview.webp">
 
@@ -25,17 +25,15 @@
 <nav class="nav">
   <div class="wrap nav-in">
     <a class="brand" href="index.html">
-      <span class="brand-dot">CA</span>
-      <span>CRM&nbsp;Analytics</span>
+      <span class="brand-dot">CA</span><span>CRM&nbsp;Analytics</span>
     </a>
     <div class="nav-links">
-      <a href="#pieces">The build</a>
+      <a href="#value">Why it matters</a>
+      <a href="#inside">What you get</a>
       <a href="#how">How it works</a>
-      <a href="#stack">Under the hood</a>
       <a href="#faq">FAQ</a>
-      <a href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">GitHub</a>
     </div>
-    <a class="btn btn-primary btn-sm" href="portal.html">Open the demo</a>
+    <a class="btn btn-primary btn-sm" href="portal.html">Open live demo</a>
   </div>
 </nav>
 
@@ -44,273 +42,319 @@
 <!-- ══════════════════════════════════════════════════════════════ hero -->
 <header class="hero">
   <div class="wrap">
-    <span class="eyebrow">Portfolio build · Data &amp; analytics</span>
+    <div class="hero-grid">
 
-    <h1>From raw transactions to a <span class="grad">working CRM</span>.</h1>
+      <div>
+        <span class="pill anim">
+          <span class="dot pulse"></span>
+          Live demo · no signup · <b>fictional data</b>
+        </span>
 
-    <p class="lede">
-      An end-to-end customer-analytics system: a seeded generator that invents a
-      business, a segmentation pipeline written in plain SQL, and an interactive
-      client-intelligence portal on top of it. No signup, no backend — open it and
-      click around.
-    </p>
+        <h1 class="anim d1">Know where your revenue <em>actually</em> comes from.</h1>
 
-    <div class="cta-row">
-      <a class="btn btn-primary" href="portal.html">Open the live demo →</a>
-      <a class="btn btn-ghost" href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">See the code</a>
+        <p class="lede anim d2">
+          Most businesses treat their customer base as one crowd. This one sorts it
+          into value tiers, watches who moves between them each month, and flags the
+          good customers going quiet — while there is still time to call them.
+        </p>
+
+        <div class="cta-row anim d3">
+          <a class="btn btn-primary" href="portal.html">Open the live demo <span class="arw">→</span></a>
+          <a class="btn btn-ghost" href="#how">See how it works</a>
+        </div>
+
+        <div class="trust anim d4">
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> No signup</span>
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Works on your phone</span>
+          <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Open source, MIT</span>
+        </div>
+      </div>
+
+      <div class="visual anim d2">
+        <div class="browser">
+          <div class="browser-bar">
+            <i></i><i></i><i></i>
+            <span class="browser-url">clients · trailing 12 months</span>
+          </div>
+          <img src="screenshots/portal-overview.webp" width="1800" height="1125"
+               alt="The client-intelligence portal: KPI tiles, a revenue trend, and the client base split into value tiers."
+               fetchpriority="high" decoding="async">
+        </div>
+
+        <div class="card-float card-a float">
+          <div class="cf-label">Top tiers</div>
+          <div class="cf-value">89%</div>
+          <div class="cf-sub">of revenue, from <b>34%</b> of clients</div>
+        </div>
+
+        <div class="card-float card-b float slow">
+          <div class="cf-label">Tier changes · last quarter</div>
+          <div class="cf-value"><span class="cf-up">↑ 243</span></div>
+          <div class="cf-sub"><span class="cf-down">↓ 238</span> moved down</div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="meta-row">
-      <span><i class="tick">✓</i> Fictional data throughout</span>
-      <span><i class="tick">✓</i> Runs entirely in your browser</span>
-      <span><i class="tick">✓</i> Works on a phone</span>
-      <span><i class="tick">✓</i> MIT licensed</span>
-    </div>
-
-    <figure class="shot">
-      <div class="shot-main">
-        <img src="screenshots/portal-overview.webp" width="1800" height="1125"
-             alt="The client-intelligence portal: KPI tiles, a revenue chart, a client-base donut by size category, and panels for top clients, revenue by boutique and recent category moves."
-             fetchpriority="high" decoding="async">
+    <!-- ── stat band ── -->
+    <div class="band anim">
+      <div class="band-grid">
+        <div>
+          <b><span data-count="89" data-suffix="%">0%</span></b>
+          <span>of revenue comes from the top three tiers</span>
+        </div>
+        <div>
+          <b><span data-count="45">0</span></b>
+          <span>clients produce it — out of 132</span>
+        </div>
+        <div>
+          <b><span data-count="481">0</span></b>
+          <span>tier changes to review last quarter</span>
+        </div>
+        <div>
+          <b><span data-count="8">0</span></b>
+          <span>value tiers, recalculated every night</span>
+        </div>
       </div>
-      <div class="shot-phone">
-        <img src="screenshots/portal-phone.webp" width="560" height="1223"
-             alt="The same portal on a phone, with a bottom tab bar." loading="lazy" decoding="async">
-      </div>
-      <figcaption class="shot-cap">The portal — desktop and phone. Every client, order and amount in it is generated.</figcaption>
-    </figure>
-
-    <div class="facts">
-      <div class="fact"><b>3</b><span>independent outputs per client, per month</span></div>
-      <div class="fact"><b>12</b><span>monthly snapshots, rebuilt from scratch each run</span></div>
-      <div class="fact"><b>240</b><span>lines of SQL doing the whole calculation</span></div>
-      <div class="fact"><b>0</b><span>servers, databases or API keys to run it</span></div>
     </div>
   </div>
 </header>
 
-<!-- ════════════════════════════════════════════════════════════ pieces -->
-<section id="pieces">
+<!-- ════════════════════════════════════════════════════════════ value -->
+<section id="value">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="kicker">What there is to look at</span>
-      <h2>Two surfaces over the same idea</h2>
+    <div class="sec-head anim">
+      <span class="kicker">Why it matters</span>
+      <h2>Three questions a customer list can’t answer</h2>
       <p>
-        A CRM has an operational face and an analytical one, and they answer
-        different questions. Both are built here, and both are live — they are
-        separate artifacts with their own datasets, not two views of one file.
+        A spreadsheet of every customer tells you who bought. It does not tell you
+        who matters, who is leaving, or what to do on Monday morning.
       </p>
     </div>
 
-    <div class="pieces">
-
-      <article class="piece lead">
-        <div class="piece-shot">
-          <img src="screenshots/portal-clients.webp" width="1400" height="875"
-               alt="The portal's client list: filter chips per size category, a sortable table with spend, order counts and opt-in status." loading="lazy" decoding="async">
+    <div class="cards">
+      <article class="card anim">
+        <div class="ico">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15 9l7 .6-5.3 4.6L18.3 21 12 17.3 5.7 21l1.6-6.8L2 9.6 9 9z"/></svg>
         </div>
-        <div class="piece-body">
-          <span class="piece-tag primary">Start here</span>
-          <h3>The client-intelligence portal</h3>
-          <p>
-            The front office a team would actually sit in front of, for a fictional
-            gourmet retailer. Sign in, browse the client base, open a client, watch
-            people move between size categories.
-          </p>
-          <ul>
-            <li>Eight size categories by trailing-12-month spend</li>
-            <li>A 360° client profile with contact consent per channel</li>
-            <li>A category transition matrix — who moved, and where</li>
-            <li>Data-source, reports and audit-log screens</li>
-            <li>A real phone layout, not a shrunken desktop</li>
-          </ul>
-          <a class="btn btn-primary" href="portal.html">Open the portal →</a>
-        </div>
+        <h3>Who is actually worth keeping?</h3>
+        <p>
+          Every customer is sorted into one of eight value tiers by what they have
+          spent over a rolling twelve months. The handful carrying your revenue stop
+          being a hunch and become a list you can filter.
+        </p>
       </article>
 
-      <article class="piece">
-        <div class="piece-shot">
-          <img src="screenshots/dashboard-overview.webp" width="1400" height="875"
-               alt="The analytics dashboard: value-tier mix, lifecycle events per month and a drill-down customer table." loading="lazy" decoding="async">
+      <article class="card anim d1">
+        <div class="ico gold">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
         </div>
-        <div class="piece-body">
-          <span class="piece-tag second">The engine's output</span>
-          <h3>The analytics dashboard</h3>
-          <p>
-            What the SQL pipeline actually produces, charted: the RFMT snapshot for
-            4,750 generated customers across twelve report months.
-          </p>
-          <ul>
-            <li>Value-tier mix — Diamond through Bronze, plus Passive</li>
-            <li>Lifecycle events: new, lost, reactivated</li>
-            <li>Per-customer drill-down with filters and CSV export</li>
-            <li>Charted client-side from one committed <code>data.json</code></li>
-          </ul>
-          <a class="btn btn-ghost" href="dashboard.html">Open the dashboard →</a>
-        </div>
+        <h3>Who is quietly slipping away?</h3>
+        <p>
+          Good customers rarely announce that they are leaving — they just order less
+          often. A recency-and-frequency grid puts the frequent buyers who have gone
+          cold in one cell, ready for a win-back call.
+        </p>
       </article>
 
+      <article class="card anim d2">
+        <div class="ico">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 4 6-8 3 4"/></svg>
+        </div>
+        <h3>Is the base getting better or worse?</h3>
+        <p>
+          Tiers are recalculated every night, so movement is visible: who was promoted,
+          who dropped, who came back after a year away. Growth stops being one number
+          and becomes a direction.
+        </p>
+      </article>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════ how -->
-<section id="how" style="background:var(--bg-2);border-block:1px solid var(--line-soft)">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="kicker">How it works</span>
-      <h2>Four steps, and every one of them re-runs</h2>
-      <p>
-        The generator is seeded at 42, so the same dataset rebuilds byte for byte on
-        any machine. Nothing here is a fixture someone hand-edited once.
-      </p>
-    </div>
-
-    <div class="pipe">
-      <div class="step">
-        <div class="step-n">1</div>
-        <h3>Invent a business</h3>
-        <p>A persona mix — heavy, regular and light buyers, plus the awkward cases: never bought, went quiet, came back, walked in anonymously.</p>
-        <code>generate.py</code>
-      </div>
-      <div class="step">
-        <div class="step-n">2</div>
-        <h3>Load and calculate</h3>
-        <p>CSVs into SQLite, then the CRM calculation runs once per report month and accumulates a per-customer × per-month snapshot.</p>
-        <code>build.py → run_crm_calculation.sql</code>
-      </div>
-      <div class="step">
-        <div class="step-n">3</div>
-        <h3>Publish the artifacts</h3>
-        <p>The snapshot becomes the dashboard's JSON, the README's chart images, and the rendered business-logic spec.</p>
-        <code>build_report.py</code>
-      </div>
-      <div class="step">
-        <div class="step-n">4</div>
-        <h3>Ship it static</h3>
-        <p>The portal's React sources are compiled ahead of time into one bundle, so no transpiler ships to the visitor.</p>
-        <code>build_portal.py</code>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═════════════════════════════════════════════════════════════ stack -->
-<section id="stack">
+<!-- ═════════════════════════════════════════════════════ concentration -->
+<section id="inside" style="background:var(--bg-warm);border-block:1px solid var(--line-2)">
   <div class="wrap">
     <div class="split">
-      <div>
-        <div class="sec-head" style="margin-bottom:26px">
-          <span class="kicker">Under the hood</span>
-          <h2>Boring on purpose</h2>
-          <p>
-            Standard library first, one dependency per job, and no build step that a
-            visitor has to trust. The interesting part is the business logic, not the
-            toolchain.
-          </p>
+
+      <div class="anim">
+        <span class="kicker">The 89% problem</span>
+        <h2 style="margin-top:14px">Your revenue is not spread evenly. It never is.</h2>
+        <p style="margin-top:18px;color:var(--ink-2);font-size:17px">
+          In the demo dataset, the three largest tiers are <b>45 clients out of 132</b>
+          — and they carry <b>89% of the money</b>. Everything else is a long tail worth
+          serving cheaply, not courting expensively.
+        </p>
+        <ul class="ticks">
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><b>Thresholds you set</b> — the tier boundaries are settings, not opinions, and every change is written to the audit log.</span></li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><b>One definition of a VIP</b> — sales, marketing and finance read the same tier off the same record.</span></li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><b>Tier is not status</b> — a VIP can be inactive and stay a VIP until their rolling spend actually decays.</span></li>
+        </ul>
+      </div>
+
+      <div class="viz anim d1">
+        <div class="viz-head">
+          <h3>Share of revenue by tier</h3>
+          <span>trailing 12 months</span>
         </div>
 
-        <dl class="rows">
-          <div class="row"><dt>Language</dt><dd>Python 3.10+, vanilla JavaScript</dd></div>
-          <div class="row"><dt>Database</dt><dd>SQLite, a file on disk</dd></div>
-          <div class="row"><dt>The calculation</dt><dd>Plain SQL, parameterised per report month</dd></div>
-          <div class="row"><dt>Portal</dt><dd>React 18, precompiled — no runtime transpiler</dd></div>
-          <div class="row"><dt>Dashboard</dt><dd>Plotly.js over a committed JSON snapshot</dd></div>
-          <div class="row"><dt>Hosting</dt><dd>GitHub Pages, static files only</dd></div>
-          <div class="row"><dt>Licence</dt><dd>MIT</dd></div>
-        </dl>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-name"><i style="background:#B98A3E"></i>VIP</span><span class="bar-track"><span class="bar-fill" style="--w:100%;background:linear-gradient(90deg,#D9AE62,#B98A3E)"></span></span><span class="bar-val">52%</span></div>
+          <div class="bar-row"><span class="bar-name"><i style="background:#173F35"></i>XXL</span><span class="bar-track"><span class="bar-fill" style="--w:44.2%;background:linear-gradient(90deg,#2C6152,#173F35)"></span></span><span class="bar-val">23%</span></div>
+          <div class="bar-row"><span class="bar-name"><i style="background:#2C6152"></i>XL</span><span class="bar-track"><span class="bar-fill" style="--w:26.9%;background:linear-gradient(90deg,#4E8370,#2C6152)"></span></span><span class="bar-val">14%</span></div>
+          <div class="bar-row"><span class="bar-name"><i style="background:#4E8370"></i>L</span><span class="bar-track"><span class="bar-fill" style="--w:9.6%;background:#4E8370"></span></span><span class="bar-val">5%</span></div>
+          <div class="bar-row"><span class="bar-name"><i style="background:#74937F"></i>M</span><span class="bar-track"><span class="bar-fill" style="--w:5.8%;background:#74937F"></span></span><span class="bar-val">3%</span></div>
+          <div class="bar-row"><span class="bar-name"><i style="background:#95A88F"></i>S</span><span class="bar-track"><span class="bar-fill" style="--w:1.9%;background:#95A88F"></span></span><span class="bar-val">1%</span></div>
+          <div class="bar-row"><span class="bar-name"><i style="background:#B3B09A"></i>XS</span><span class="bar-track"><span class="bar-fill" style="--w:1.9%;background:#B3B09A"></span></span><span class="bar-val">1%</span></div>
+          <div class="bar-row"><span class="bar-name"><i style="background:#C9C3B4"></i>XXS</span><span class="bar-track"><span class="bar-fill" style="--w:1.9%;background:#C9C3B4"></span></span><span class="bar-val">1%</span></div>
+        </div>
 
-        <div class="chips">
-          <span class="chip">Python</span>
-          <span class="chip">SQL</span>
-          <span class="chip">SQLite</span>
-          <span class="chip">pandas</span>
-          <span class="chip">Faker</span>
-          <span class="chip">React</span>
-          <span class="chip">Plotly.js</span>
-          <span class="chip">GitHub Pages</span>
+        <div class="viz-foot">
+          <div>
+            <b><span data-count="45">0</span> / 132</b>
+            <span>clients in the top three tiers</span>
+          </div>
+          <div>
+            <b><span data-count="89" data-suffix="%">0%</span></b>
+            <span>of trailing-12-month revenue</span>
+          </div>
         </div>
       </div>
 
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════ movement -->
+<section>
+  <div class="wrap">
+    <div class="split flip">
+
+      <div class="split-media anim">
+        <div class="frame">
+          <img src="screenshots/portal-trends.webp" width="1400" height="875"
+               alt="The status-trends screen: new versus churned clients per month, and a matrix of who moved from which tier to which."
+               loading="lazy" decoding="async">
+        </div>
+      </div>
+
+      <div class="anim d1">
+        <span class="kicker">Movement</span>
+        <h2 style="margin-top:14px">Customers don’t stand still. Neither should the report.</h2>
+        <p style="margin-top:18px;color:var(--ink-2);font-size:17px">
+          A tier on its own is a photograph. What a business needs is the direction of
+          travel — and last quarter, <b>243 clients moved up</b> while <b>238 moved
+          down</b>. Almost a wash, and nobody would have felt it.
+        </p>
+        <ul class="ticks">
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><b>A transition matrix</b> — from which tier, to which tier, how many. Click a cell and get the names.</span></li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><b>New, lost and reactivated</b> counted every month, so churn shows up as a trend, not a surprise.</span></li>
+          <li><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <span><b>Export the list</b> — every view becomes a CSV your campaign tool can actually use.</span></li>
+        </ul>
+        <div class="cta-row">
+          <a class="btn btn-ghost" href="portal.html">Try it in the demo <span class="arw">→</span></a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════ how -->
+<section id="how" style="background:var(--bg-warm);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <div class="sec-head anim">
+      <span class="kicker">How it works</span>
+      <h2>Three steps, and then it runs itself</h2>
+      <p>No data warehouse to buy, no modelling project to staff. Sales history in, a ranked customer base out.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step anim">
+        <div class="step-n">1</div>
+        <h3>Bring your sales history</h3>
+        <p>Customers, products and transactions — a nightly file drop or the integration API. The demo ships both screens so you can see what each one asks for.</p>
+      </div>
+      <div class="step anim d1">
+        <div class="step-n">2</div>
+        <h3>The rules do the sorting</h3>
+        <p>Every night, each customer is scored on recency, frequency and volume, then placed in a tier and marked active or not. The rules are written down and versioned, not buried in a dashboard.</p>
+      </div>
+      <div class="step anim d2">
+        <div class="step-n">3</div>
+        <h3>Your team opens the portal</h3>
+        <p>Browse the base, open a client, see the tier and why they have it, and export the list. It works the same on a laptop and on a phone in a shop.</p>
+      </div>
+    </div>
+
+    <div class="honest anim" style="margin-top:52px">
+      <span class="mark">i</span>
       <div>
-        <div class="notice" style="margin-bottom:22px">
-          <span class="notice-mark"></span>
-          <div>
-            <p><b>Everything on this site is fictional.</b></p>
-            <p style="margin-top:8px">
-              The company does not exist. Every client, order, amount, staff member and
-              log entry is machine-generated, and contact details use the reserved
-              <code>.example</code> domains so no generated record can address a real
-              mailbox. The demo says so on every screen.
-            </p>
-          </div>
-        </div>
-
-        <div class="sec-head" style="margin-bottom:20px">
-          <h2 style="font-size:22px">The rules are written down first</h2>
-          <p style="font-size:15px">
-            The segmentation spec is the source of truth; the SQL implements it, and
-            the charts follow. It is published alongside the demo so you can check the
-            numbers against the rules that produced them.
-          </p>
-        </div>
-
-        <div class="chips">
-          <a class="chip" href="specs/crm_calculation_logic.html">Business logic →</a>
-          <a class="chip" href="specs/source_files_specifications.html">Data spec →</a>
-          <a class="chip" href="specs/project_requirements.html">Requirements →</a>
-        </div>
+        <h3>This is a portfolio build, and everything in it is invented.</h3>
+        <p>
+          It is presented as a product because that was the exercise — but nothing here
+          is for sale, there are no customers, and every client, order, amount and staff
+          member in the demo was produced by a seeded generator. The figures quoted on
+          this page are real readings from that fictional dataset, not claims about
+          anybody’s business.
+        </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════ faq -->
-<section id="faq" style="background:var(--bg-2);border-block:1px solid var(--line-soft)">
+<!-- ══════════════════════════════════════════════════════════════ faq -->
+<section id="faq">
   <div class="wrap">
-    <div class="sec-head">
+    <div class="sec-head anim">
       <span class="kicker">FAQ</span>
-      <h2>The questions people actually ask</h2>
+      <h2>Straight answers</h2>
     </div>
 
-    <div class="faq">
+    <div class="faq anim d1">
       <details>
-        <summary>Is any of this real customer data?</summary>
-        <p>No, and it never was. A seeded Python script invents the customers, the products and five years of invoices. Names come from a fictional name pool, and email addresses use the <code>.example</code> domains reserved by RFC 2606 precisely so documentation cannot reach a real inbox.</p>
+        <summary>Can I really just click in, with no signup?</summary>
+        <p>Yes. The demo opens on a sign-in screen because a real CRM would, but any email and any six-digit code get you in. There is nothing behind it to protect — the whole thing runs in your browser.</p>
       </details>
 
       <details>
-        <summary>Why do the portal and the dashboard segment clients differently?</summary>
-        <p>Because they are two different artifacts, and the site does not pretend otherwise. The dashboard charts the RFMT model in the business-logic spec — Diamond through Bronze, driven by consumable volume and order frequency. The portal is a product prototype for a different fictional business, and tiers clients by trailing-12-month spend instead.</p>
-        <p>Merging them onto one model is the obvious next step; presenting them as if they already share one would be the dishonest shortcut.</p>
+        <summary>Is any of this real customer data?</summary>
+        <p>No. A seeded Python script invents the company, the customers, the products and five years of invoices. Email addresses use the <code>.example</code> domains reserved by RFC 2606, precisely so a generated record cannot reach a real inbox.</p>
+      </details>
+
+      <details>
+        <summary>What decides which tier a customer lands in?</summary>
+        <p>Net spend over a rolling twelve months, against thresholds you set. Recency and order frequency gate the top tiers, so a single large order does not buy VIP status, and length of relationship is carried separately rather than inflating the tier on its own.</p>
+        <p>The full rules are published in the <a href="specs/crm_calculation_logic.html">business-logic spec</a>.</p>
+      </details>
+
+      <details>
+        <summary>What is the analytics dashboard, then?</summary>
+        <p>A second surface, built from the same pipeline: the RFMT snapshot for 4,750 generated customers charted across twelve report months. It uses a different tier model from the portal because the two were built as separate artifacts — <a href="dashboard.html">open it here</a> and the difference is obvious. Merging them onto one model is the next piece of work.</p>
       </details>
 
       <details>
         <summary>Can I run it myself?</summary>
-        <p>Yes — clone the repo, install the requirements, and run the generator, the build and the report script in that order. The README lists the commands. It needs no server, no API key and no account.</p>
-      </details>
-
-      <details>
-        <summary>Why RFMT and not plain RFM?</summary>
-        <p>Recency, frequency and monetary value decide the tier; tenure is carried alongside as <code>tenure_months</code> so cohorts can be compared without letting length of relationship inflate a tier on its own.</p>
-      </details>
-
-      <details>
-        <summary>Why exclude devices from the engagement metrics?</summary>
-        <p>Because a device is bought once. Counting it would make a single-purchase buyer look loyal. Only recurring <em>consumable</em> lines drive the value tier; the one device-based field kept is the date of the first device purchase.</p>
+        <p>Yes — it is MIT licensed. Clone the repository, run the generator, the build and the report script, and you have the whole thing locally. No server, no API key, no account.</p>
       </details>
     </div>
   </div>
 </section>
 
-<!-- ═════════════════════════════════════════════════════════════ final -->
-<section>
+<!-- ════════════════════════════════════════════════════════════ final -->
+<section style="padding-top:0">
   <div class="wrap">
-    <div class="final">
-      <h2>See it before you read about it.</h2>
-      <p>The portal opens straight into a signed-out CRM. Any email and any code get you in — there is nothing behind it to protect.</p>
+    <div class="final anim">
+      <h2>Stop guessing which customers matter.</h2>
+      <p>The demo opens with the whole client base in front of you. Sort it, filter it, open somebody, and see the reasoning behind their tier.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="portal.html">Open the live demo →</a>
+        <a class="btn btn-primary" href="portal.html">Open the live demo <span class="arw">→</span></a>
         <a class="btn btn-ghost" href="https://github.com/scripts-and-tables/crm-analytics-system" target="_blank" rel="noopener">Browse the source</a>
       </div>
     </div>
@@ -319,26 +363,26 @@
 
 </main>
 
-<!-- ════════════════════════════════════════════════════════════ footer -->
+<!-- ═══════════════════════════════════════════════════════════ footer -->
 <footer>
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="brand" href="index.html" style="margin-bottom:12px">
-          <span class="brand-dot">CA</span><span>CRM&nbsp;Analytics</span>
-        </a>
-        <p style="max-width:38ch">
-          An end-to-end customer-segmentation build — generator, SQL pipeline,
-          portal and dashboard. Fictional data, real code.
+        <a class="brand" href="index.html" style="margin-bottom:14px"><span class="brand-dot">CA</span><span>CRM&nbsp;Analytics</span></a>
+        <p style="max-width:40ch">
+          Customer value tiers, lifecycle tracking and a client-intelligence portal.
+          A portfolio build on entirely fictional data.
         </p>
       </div>
       <div>
-        <h4>Demos</h4>
-        <a href="portal.html">Client portal</a>
+        <h4>Product</h4>
+        <a href="portal.html">Live demo</a>
         <a href="dashboard.html">Analytics dashboard</a>
+        <a href="#how">How it works</a>
+        <a href="#faq">FAQ</a>
       </div>
       <div>
-        <h4>Docs</h4>
+        <h4>Documentation</h4>
         <a href="specs/crm_calculation_logic.html">Business logic</a>
         <a href="specs/source_files_specifications.html">Data spec</a>
         <a href="specs/project_requirements.html">Requirements</a>
@@ -346,10 +390,11 @@
       </div>
     </div>
     <div class="foot-note">
-      MIT licensed · built as a portfolio project · every name, number and record on this site is generated
+      MIT licensed · a portfolio project, not a product for sale · every name, number and record on this site is generated
     </div>
   </div>
 </footer>
 
+<script src="assets/js/landing.js" defer></script>
 </body>
 </html>
