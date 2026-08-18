@@ -4,8 +4,29 @@ const { useState, useMemo } = React;
 function OverviewScreen({ go }) {
   const C = CRM;
   const last = C.revenueSeries.length - 1;
-  const revDelta = ((C.revenueSeries[last] - C.revenueSeries[last - 1]) / C.revenueSeries[last - 1]) * 100;
-  const actDelta = ((C.activeSeries[last] - C.activeSeries[last - 1]) / C.activeSeries[last - 1]) * 100;
+  // Every delta is a real month-over-month change in the generated data, not a
+  // number typed into the markup. `pct` guards the divide so an empty month
+  // shows no delta rather than Infinity.
+  const pct = (a, b) => (b ? ((a - b) / b) * 100 : null);
+  const revDelta = pct(C.revenueSeries[last], C.revenueSeries[last - 1]);
+  const actDelta = pct(C.activeSeries[last], C.activeSeries[last - 1]);
+  const newDelta = pct(C.newSeries[last], C.newSeries[last - 1]);
+  // Basket size for the last month vs the one before, summed from transactions.
+  const basketOf = (mi) => {
+    const t = C.tx; let sum = 0, n = 0;
+    for (let i = t.n - 1; i >= 0; i--) {
+      const d = new Date(Date.UTC(2026, 5, 10) - (730 - t.day[i]) * 864e5);
+      const key = d.getUTCFullYear() * 12 + d.getUTCMonth();
+      if (key === mi) { sum += t.amount[i]; n++; }
+      else if (key < mi) break;
+    }
+    return n ? sum / n : 0;
+  };
+  // May 2026 against April — the last two complete months, matching the series.
+  const basketDelta = React.useMemo(() => {
+    const mayKey = 2026 * 12 + 4;
+    return pct(basketOf(mayKey), basketOf(mayKey - 1));
+  }, []);
   const segCounts = useMemo(() => {
     const m = {};
     C.SEGMENTS.forEach((s) => (m[s] = 0));
@@ -30,11 +51,11 @@ function OverviewScreen({ go }) {
       </header>
 
       <div className="kpi-row">
-        <Kpi label="Active clients" value={fmtNum(C.activeSeries[last])} delta={actDelta} deltaLabel="vs May" spark={C.activeSeries.slice(-10)} accent />
-        <Kpi label="Revenue · MTD" value="AED 2.41M" delta={revDelta} deltaLabel="vs May" spark={C.revenueSeries.slice(-10)} />
-        <Kpi label="Avg basket" value="AED 386" delta={3.2} deltaLabel="vs May" />
-        <Kpi label="12-mo retention" value="71.4%" delta={-1.8} deltaLabel="vs Q1" />
-        <Kpi label="New clients · MTD" value={fmtNum(C.newSeries[last])} delta={11.5} deltaLabel="vs May" />
+        <Kpi label="Buying clients · May" value={fmtNum(C.activeSeries[last])} delta={actDelta} deltaLabel="vs Apr" spark={C.activeSeries.slice(-10)} accent />
+        <Kpi label="Revenue · May" value={"AED " + fmtK(C.revenueSeries[last])} delta={revDelta} deltaLabel="vs Apr" spark={C.revenueSeries.slice(-10)} />
+        <Kpi label="Avg basket" value={fmtAED(C.KPI.avgBasket)} delta={basketDelta} deltaLabel="vs Apr" />
+        <Kpi label="Active base" value={((C.KPI.activeNow / C.KPI.clients) * 100).toFixed(1) + "%"} deltaLabel={fmtNum(C.KPI.activeNow) + " bought in 180d"} />
+        <Kpi label="New clients · May" value={fmtNum(C.newSeries[last])} delta={newDelta} deltaLabel="vs Apr" />
       </div>
 
       <div className="grid-2-1">

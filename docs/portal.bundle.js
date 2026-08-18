@@ -4,31 +4,70 @@
 
 /* ---- crm/data.js ---- */
 (function () {
-// ── Al Waha Gourmet · CRM mock data ─────────────────────────────
-// Seeded PRNG so data is stable across reloads.
+// ── Al Waha Gourmet · CRM demo data ─────────────────────────────
 //
 // EVERY NAME IN THIS FILE IS INVENTED. Al Waha Gourmet is not a company, the
 // corporate accounts are not businesses, the boutiques are not places, and the
 // staff are not people. Contact details use the RFC 2606 reserved `.example`
 // domains on purpose: a demo record must not be able to address a real
 // mailbox, however plausible it is made to look.
+//
+// ── WHY THIS FILE IS SMALL AND THE DATASET IS NOT ──────────────────────────
+// Nothing here is shipped as data. A seeded generator builds ~2,000 clients
+// and ~100,000 transactions in the browser at load, so the payload is this
+// source file — about 20 KB — no matter how large the dataset it produces.
+// Raising the client count costs download nothing; it costs a few milliseconds
+// of generation and some memory, which is why the transactions live in typed
+// arrays rather than 100,000 objects (roughly 2 MB instead of ~20 MB, and it
+// is a phone that pays that bill).
+//
+// ── TRANSACTIONS ARE THE SOURCE, EVERYTHING ELSE IS DERIVED ────────────────
+// The previous version drew each client's spend, the monthly revenue line and
+// the active-client line as three unrelated random series, and hardcoded the
+// KPI tiles on top. Nothing agreed with anything: the revenue chart was not
+// the revenue of the clients in the table. Now the generator emits purchases,
+// and every figure on every screen — tier, recency, monthly series, boutique
+// totals, the transition matrix, the KPI tiles — is summed back out of them.
+// If a number appears twice in this app, it now has one source.
 (function () {
-  let seed = 20260610;
-  const rnd = () => {
-    seed = (seed * 1103515245 + 12345) % 2147483648;
-    return seed / 2147483648;
-  };
-  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+  "use strict";
+  const T0 = (window.performance || Date).now();
+
+  // ── seeded PRNG ────────────────────────────────────────────────
+  // mulberry32: same reproducibility as the old LCG, better distribution in
+  // the low bits — which matters now that draws decide tier boundaries.
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const rnd = rng(20260610);
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
   const ri = (min, max) => Math.floor(min + rnd() * (max - min + 1));
+  const rf = (min, max) => min + rnd() * (max - min);
 
-  const FIRST = ["Mariam", "Ahmed", "Fatima", "Khalid", "Noora", "Saeed", "Aisha", "Omar", "Hessa", "Rashid", "Layla", "Hamdan", "Salama", "Yousef", "Reem", "Majid", "Shamma", "Tariq", "Alia", "Faisal", "Priya", "Arjun", "Elena", "Sophie", "James", "Chen", "Anastasia", "Marco", "Yuki", "Daniel"];
-  const LAST = ["Al Maktoum", "Al Falasi", "Al Suwaidi", "Al Mansoori", "Al Shamsi", "Al Marri", "Al Qubaisi", "Al Hammadi", "Al Zaabi", "Al Nuaimi", "Sharma", "Patel", "Petrova", "Laurent", "Whitfield", "Wang", "Volkova", "Rossi", "Tanaka", "Okonkwo"];
-  // Invented corporate accounts. The originals in the design named real
-  // hospitality companies; attaching fabricated spend figures to identifiable
-  // businesses is not something a public portfolio page should do.
-  const CORP = ["Harbour Line Hotels", "Golden Sands Catering", "Crescent Bay Hospitality", "Palm Court Events", "Silk Route Lounges", "Desert Rose Resorts", "Blue Lagoon F&B", "Cedar House Catering", "Marina Heights Group", "Oasis Terrace Dining"];
+  // ── calendar ───────────────────────────────────────────────────
+  const MN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const TODAY = new Date(Date.UTC(2026, 5, 10));
+  const DAY = 864e5;
+  const HISTORY_DAYS = 730;                 // 24 months of purchases
+  const dayToDate = (d) => new Date(TODAY.getTime() - (HISTORY_DAYS - d) * DAY);
+  const fmtDate = (dt) => dt.getUTCDate() + " " + MN[dt.getUTCMonth()] + " " + dt.getUTCFullYear();
+  //: days-ago for a day index (0 = oldest, HISTORY_DAYS = today)
+  const daysAgo = (d) => HISTORY_DAYS - d;
 
-  // Invented retail locations, for the same reason.
+  // ── vocabularies ───────────────────────────────────────────────
+  const FIRST = ["Mariam", "Ahmed", "Fatima", "Khalid", "Noora", "Saeed", "Aisha", "Omar", "Hessa", "Rashid", "Layla", "Hamdan", "Salama", "Yousef", "Reem", "Majid", "Shamma", "Tariq", "Alia", "Faisal", "Priya", "Arjun", "Elena", "Sophie", "James", "Chen", "Anastasia", "Marco", "Yuki", "Daniel", "Nadia", "Karim", "Leila", "Samir", "Zara", "Idris", "Amina", "Hassan", "Dana", "Bilal", "Mei", "Ivan", "Clara", "Pierre", "Sanjay", "Ana", "Tomas", "Farah", "Nour", "Rami"];
+  const LAST = ["Al Maktoum", "Al Falasi", "Al Suwaidi", "Al Mansoori", "Al Shamsi", "Al Marri", "Al Qubaisi", "Al Hammadi", "Al Zaabi", "Al Nuaimi", "Sharma", "Patel", "Petrova", "Laurent", "Whitfield", "Wang", "Volkova", "Rossi", "Tanaka", "Okonkwo", "Haddad", "Farouk", "Menon", "Costa", "Nguyen", "Silva", "Kovac", "Ahmed", "Iqbal", "Nasser"];
+  // Invented corporate accounts. Naming real hospitality companies and
+  // attaching fabricated spend to them is not something a public page does.
+  const CORP = ["Harbour Line Hotels", "Golden Sands Catering", "Crescent Bay Hospitality", "Palm Court Events", "Silk Route Lounges", "Desert Rose Resorts", "Blue Lagoon F&B", "Cedar House Catering", "Marina Heights Group", "Oasis Terrace Dining", "Amber Gate Hotels", "Coral Quay Catering", "Northwind Hospitality", "Lantern Bay Events", "Verdant Table Group"];
+
+  // Invented retail locations, for the same reason. `share` is the relative
+  // pull of each boutique when a purchase picks one.
   const LOCATIONS = [
     { id: "dxm", name: "Downtown Gallery", city: "Dubai", share: 0.30 },
     { id: "moe", name: "Westside Mall", city: "Dubai", share: 0.22 },
@@ -37,8 +76,12 @@
     { id: "yas", name: "Island Mall", city: "Abu Dhabi", share: 0.10 },
     { id: "shj", name: "Northgate Centre", city: "Sharjah", share: 0.08 },
   ];
+  const LOC_CUM = (() => { let a = 0; return LOCATIONS.map((l) => (a += l.share)); })();
+  const pickLoc = () => { const u = rnd() * LOC_CUM[LOC_CUM.length - 1]; for (let i = 0; i < LOC_CUM.length; i++) if (u <= LOC_CUM[i]) return i; return 0; };
 
-  // ── Size categories by trailing-12-month spend ────────────────
+  const PRODUCTS = ["Royal Khalas Dates 1kg", "Sukkari Gift Box", "Date & Pistachio Pralines", "Saffron Honey 250g", "Camel Milk Chocolate", "Medjool Premium Tray", "Arabic Coffee Sampler", "Ramadan Hamper Grande", "Stuffed Dates Assortment", "Oud-Infused Chocolate Bar"];
+
+  // ── size categories by trailing-12-month spend ─────────────────
   const SEGMENTS = ["VIP", "XXL", "XL", "L", "M", "S", "XS", "XXS"];
   const TIER_MIN = { VIP: 60000, XXL: 30000, XL: 15000, L: 8000, M: 4000, S: 2000, XS: 1000, XXS: 0 };
   const SEG_META = {
@@ -54,94 +97,246 @@
   const tierOf = (spend) => SEGMENTS.find((s) => spend >= TIER_MIN[s]);
   const TYPES = ["Individual", "Corporate", "HoReCa"];
 
-  const PRODUCTS = ["Royal Khalas Dates 1kg", "Sukkari Gift Box", "Date & Pistachio Pralines", "Saffron Honey 250g", "Camel Milk Chocolate", "Medjool Premium Tray", "Arabic Coffee Sampler", "Ramadan Hamper Grande", "Stuffed Dates Assortment", "Oud-Infused Chocolate Bar"];
-  const MN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const TODAY = new Date(2026, 5, 10);
-  const fmtDate = (d) => d.getDate() + " " + MN[d.getMonth()] + " " + d.getFullYear();
+  // ── personas ───────────────────────────────────────────────────
+  // `w` weight, `ord` orders per year, `basket` AED per order, `stops` the
+  // chance this persona goes quiet partway through the history. The awkward
+  // cases are deliberate: a segmentation demo where nobody ever lapses proves
+  // nothing about the segmentation.
+  const N_CLIENTS = 2000;
+  const FREQ_SCALE = 1.365;         // tuned against a measured run to land near 100k rows
+  const PERSONAS = [
+    { key: "key_account", w: 0.020, ord: [70, 150], basket: [1500, 5200], stops: 0.03, corp: true },
+    { key: "heavy",       w: 0.065, ord: [55, 110], basket: [420, 950],   stops: 0.05 },
+    { key: "regular",     w: 0.215, ord: [22, 52],  basket: [240, 620],   stops: 0.08 },
+    { key: "light",       w: 0.400, ord: [6, 19],   basket: [150, 470],   stops: 0.12 },
+    { key: "occasional",  w: 0.190, ord: [1, 5],    basket: [120, 400],   stops: 0.18 },
+    { key: "lapsed",      w: 0.080, ord: [8, 30],   basket: [180, 520],   stops: 1.00 },
+    { key: "never",       w: 0.030, ord: [0, 0],    basket: [0, 0],       stops: 0 },
+  ];
+  const P_CUM = (() => { let a = 0; return PERSONAS.map((p) => (a += p.w)); })();
+  const pickPersona = () => { const u = rnd() * P_CUM[P_CUM.length - 1]; for (let i = 0; i < P_CUM.length; i++) if (u <= P_CUM[i]) return PERSONAS[i]; return PERSONAS[3]; };
 
-  // ── Clients ───────────────────────────────────────────────────
+  // ── pass 1: clients, and how many orders each will place ───────
   const clients = [];
-  for (let i = 0; i < 132; i++) {
-    const type = rnd() < 0.78 ? "Individual" : rnd() < 0.6 ? "Corporate" : "HoReCa";
-    const name = type === "Individual" ? pick(FIRST) + " " + pick(LAST) : pick(CORP) + (rnd() < 0.4 ? " — Procurement" : "");
-    const mult = type === "Individual" ? 1 : type === "Corporate" ? 2.2 : 3;
-    const spend12m = Math.round(350 * Math.pow(220, rnd()) * mult);
-    const seg = tierOf(spend12m);
-    const si = SEGMENTS.indexOf(seg);
-    const basket = type === "Individual" ? ri(140, 850) : ri(1400, 5500);
-    const orders12m = Math.max(1, Math.round(spend12m / basket));
-    const avgOrder = Math.round(spend12m / orders12m);
-    // bigger tiers buy more recently
-    const lastDays = Math.max(1, Math.round(Math.pow(rnd(), 1.4) * (40 + si * 55)));
-    const lastPurchase = new Date(TODAY.getTime() - lastDays * 864e5);
-    const sinceYear = 2018 + ri(0, 7);
-    const firstPurchase = new Date(Math.min(new Date(sinceYear, ri(0, 11), ri(1, 28)).getTime(), lastPurchase.getTime() - 30 * 864e5));
-    const monthly = Array.from({ length: 12 }, () => (rnd() < Math.min(orders12m / 10, 0.85) + 0.12 ? Math.round(avgOrder * (0.4 + rnd() * 1.4)) : 0));
-    // previous-quarter category: mostly stable, some adjacent moves
-    const r = rnd();
-    const prevSeg = r < 0.62 ? seg : SEGMENTS[Math.max(0, Math.min(SEGMENTS.length - 1, si + (r < 0.81 ? 1 : -1)))];
-    // contact + opt-ins — reserved .example domains only
+  const plan = [];                  // {n, basket, from, to} per client
+  let total = 0;
+
+  for (let i = 0; i < N_CLIENTS; i++) {
+    const p = pickPersona();
+    const type = p.corp ? (rnd() < 0.55 ? "Corporate" : "HoReCa")
+      : rnd() < 0.86 ? "Individual" : (rnd() < 0.6 ? "Corporate" : "HoReCa");
+    const name = type === "Individual"
+      ? pick(FIRST) + " " + pick(LAST)
+      : pick(CORP) + (rnd() < 0.35 ? " — Procurement" : "");
+
+    // When they joined, and when (if ever) they went quiet.
+    const joinDay = rnd() < 0.22 ? ri(0, HISTORY_DAYS - 40) : -ri(1, 1500);
+    const from = Math.max(0, joinDay);
+    const stops = rnd() < p.stops;
+    const to = stops ? ri(from + 20, HISTORY_DAYS - 25) : HISTORY_DAYS;
+    const span = Math.max(1, to - from);
+
+    const perYear = rf(p.ord[0], p.ord[1]) * FREQ_SCALE;
+    const n = Math.max(0, Math.round((perYear * span) / 365));
+    const basket = rf(p.basket[0], p.basket[1]);
+
+    plan.push({ n, basket, from, to });
+    total += n;
+
     const slug = name.toLowerCase().replace(/[^a-z ]/g, "").trim().split(/ +/).join(".");
-    const email = type === "Individual" ? slug + "@" + pick(["example.com", "example.org", "example.net"]) : "procurement@" + slug.split(".")[0] + ".example";
-    const phone = type === "Individual" ? "+971 5" + pick(["0", "2", "4", "5", "6", "8"]) + " " + ri(100, 999) + " " + ri(1000, 9999) : "+971 4 " + ri(200, 899) + " " + ri(1000, 9999);
-    const optIn = { email: rnd() < 0.74, sms: rnd() < 0.58, phone: rnd() < 0.36 };
     clients.push({
       id: "C" + String(1001 + i),
-      name, type, seg, prevSeg,
-      loc: pick(LOCATIONS).id,
-      spend12m, avgOrder, orders12m,
-      lastDays,
-      firstStr: fmtDate(firstPurchase),
-      lastStr: fmtDate(lastPurchase),
-      sinceYear,
-      monthly,
+      // The row this client owns in the transaction arrays. `clients` gets
+      // sorted by spend below, so position in the array stops matching the
+      // transaction index — this is what survives the sort.
+      row: i,
+      name, type, persona: p.key,
+      loc: LOCATIONS[pickLoc()].id,
       favorite: pick(PRODUCTS),
-      points: Math.round(spend12m / 10),
-      email, phone, optIn,
+      email: type === "Individual"
+        ? slug + "@" + pick(["example.com", "example.org", "example.net"])
+        : "procurement@" + slug.split(".")[0] + ".example",
+      phone: type === "Individual"
+        ? "+971 5" + pick(["0", "2", "4", "5", "6", "8"]) + " " + ri(100, 999) + " " + ri(1000, 9999)
+        : "+971 4 " + ri(200, 899) + " " + ri(1000, 9999),
+      optIn: { email: rnd() < 0.74, sms: rnd() < 0.58, phone: rnd() < 0.36 },
+      // filled in pass 3
+      spend12m: 0, spendPrev12m: 0, orders12m: 0, avgOrder: 0, ordersAll: 0,
+      lastDays: 9999, monthly: [], seg: "XXS", prevSeg: "XXS",
+      firstStr: "—", lastStr: "—", sinceYear: 2026, points: 0,
     });
   }
+
+  // ── pass 2: the transactions themselves ────────────────────────
+  // Parallel typed arrays, sorted by day. 100k rows cost about 2 MB here; the
+  // same rows as objects would cost ten times that, and this is what a phone
+  // has to hold while React renders.
+  const txClient = new Int32Array(total);
+  const txDay = new Int16Array(total);
+  const txAmount = new Float32Array(total);
+  const txLoc = new Uint8Array(total);
+  const txProduct = new Uint8Array(total);
+
+  let w = 0;
+  for (let i = 0; i < N_CLIENTS; i++) {
+    const { n, basket, from, to } = plan[i];
+    const homeLoc = LOCATIONS.findIndex((l) => l.id === clients[i].loc);
+    for (let k = 0; k < n; k++) {
+      const day = ri(from, to);
+      // Seasonal lift: Ramadan-ish and year-end gifting bumps.
+      const m = dayToDate(day).getUTCMonth();
+      const season = (m === 2 || m === 3) ? 1.35 : (m === 11) ? 1.28 : 1;
+      txClient[w] = i;
+      txDay[w] = day;
+      txAmount[w] = basket * rf(0.45, 1.75) * season;
+      // Most purchases happen at the client's home boutique, not at random.
+      txLoc[w] = rnd() < 0.72 ? homeLoc : pickLoc();
+      txProduct[w] = Math.floor(rnd() * PRODUCTS.length);
+      w++;
+    }
+  }
+
+  // Sort by day so every downstream pass is a linear scan and a client's
+  // order history comes out newest-first without re-sorting per render.
+  const order = Array.from({ length: total }, (_, i) => i)
+    .sort((a, b) => txDay[a] - txDay[b] || txClient[a] - txClient[b]);
+  const sClient = new Int32Array(total), sDay = new Int16Array(total),
+        sAmount = new Float32Array(total), sLoc = new Uint8Array(total),
+        sProduct = new Uint8Array(total);
+  for (let i = 0; i < total; i++) {
+    const j = order[i];
+    sClient[i] = txClient[j]; sDay[i] = txDay[j]; sAmount[i] = txAmount[j];
+    sLoc[i] = txLoc[j]; sProduct[i] = txProduct[j];
+  }
+
+  // Row indices per client, in day order, for O(1) history lookup.
+  const byClient = Array.from({ length: N_CLIENTS }, () => []);
+  for (let i = 0; i < total; i++) byClient[sClient[i]].push(i);
+
+  // ── pass 3: derive every client figure from their transactions ─
+  const CUT_12M = HISTORY_DAYS - 365;       // start of the trailing year
+  const CUT_24M = 0;
+  // The 18 months ending with the last COMPLETE one. Today is the 10th, so
+  // the current month holds a third of its trade; including it would put a
+  // partial month next to a full one and report a 70% revenue collapse that
+  // is only a calendar artefact. Recency still uses the real date — this
+  // window is for the monthly series alone.
+  const MONTH_KEYS = [];
+  for (let k = 17; k >= 0; k--) {
+    const d = new Date(Date.UTC(2026, 4 - k, 1));   // ... through May 2026
+    MONTH_KEYS.push(d.getUTCFullYear() * 12 + d.getUTCMonth());
+  }
+  const MONTHS = MONTH_KEYS.map((key, i) => {
+    const y = Math.floor(key / 12), m = key % 12;
+    return MN[m] + (m === 0 || i === 0 ? " ’" + String(y).slice(2) : "");
+  });
+  const monthIndex = (day) => {
+    const d = dayToDate(day);
+    return MONTH_KEYS.indexOf(d.getUTCFullYear() * 12 + d.getUTCMonth());
+  };
+
+  const revenueSeries = new Array(18).fill(0);
+  const ordersSeries = new Array(18).fill(0);
+  const activeSets = Array.from({ length: 18 }, () => new Set());
+
+  for (let i = 0; i < N_CLIENTS; i++) {
+    const rows = byClient[i];
+    const c = clients[i];
+    c.ordersAll = rows.length;
+    if (!rows.length) { c.monthly = new Array(12).fill(0); c.lastDays = 9999; continue; }
+
+    const monthly = new Array(12).fill(0);
+    let s12 = 0, sPrev = 0, n12 = 0;
+    for (const r of rows) {
+      const day = sDay[r], amt = sAmount[r];
+      if (day > CUT_12M) {
+        s12 += amt; n12++;
+        // trailing-12 bucket, 0 = oldest of the twelve
+        const b = 11 - Math.floor((HISTORY_DAYS - day) / 30.44);
+        if (b >= 0 && b < 12) monthly[b] += amt;
+      } else if (day > CUT_24M) sPrev += amt;
+
+      const mi = monthIndex(day);
+      if (mi >= 0) { revenueSeries[mi] += amt; ordersSeries[mi]++; activeSets[mi].add(i); }
+    }
+
+    const firstDay = sDay[rows[0]], lastDay = sDay[rows[rows.length - 1]];
+    c.spend12m = Math.round(s12);
+    c.spendPrev12m = Math.round(sPrev);
+    c.orders12m = n12;
+    c.avgOrder = n12 ? Math.round(s12 / n12) : 0;
+    c.lastDays = daysAgo(lastDay);
+    c.firstStr = fmtDate(dayToDate(firstDay));
+    c.lastStr = fmtDate(dayToDate(lastDay));
+    c.sinceYear = dayToDate(firstDay).getUTCFullYear();
+    c.monthly = monthly.map((v) => Math.round(v));
+    c.points = Math.round(c.spend12m / 10);
+    c.seg = tierOf(c.spend12m);
+    c.prevSeg = tierOf(c.spendPrev12m);
+  }
+  // A client who never bought still has a tier — the lowest one — because the
+  // portal must be able to show them rather than quietly drop them.
+  clients.forEach((c) => { c.seg = c.seg || "XXS"; c.prevSeg = c.prevSeg || "XXS"; });
   clients.sort((a, b) => b.spend12m - a.spend12m);
 
-  // ── Time series (18 months) ──────────────────────────────────
-  const MONTHS = [];
-  for (let k = 17; k >= 0; k--) {
-    const d = new Date(2026, 5 - k, 1);
-    MONTHS.push(MN[d.getMonth()] + (d.getMonth() === 0 || k === 17 ? " ’" + String(d.getFullYear()).slice(2) : ""));
+  // ── series, in the units the charts expect (AED '000) ──────────
+  const revenueK = revenueSeries.map((v) => Math.round(v / 1000));
+  const activeSeries = activeSets.map((s) => s.size);
+  // New = first-ever purchase that month; churned = last-ever purchase was
+  // three months before. Counted from the transactions, not invented.
+  const firstMonth = new Map(), lastMonth = new Map();
+  for (let i = 0; i < total; i++) {
+    const mi = monthIndex(sDay[i]);
+    if (mi < 0) continue;
+    const c = sClient[i];
+    if (!firstMonth.has(c)) firstMonth.set(c, mi);
+    lastMonth.set(c, mi);
   }
-  const seasonal = (i) => 1 + 0.45 * Math.sin((i + 3) / 2.4) + (i % 12 === 2 || i % 12 === 14 ? 0.55 : 0); // Ramadan-ish bumps
-  const revenueSeries = MONTHS.map((_, i) => Math.round(1480 + i * 26 + 420 * seasonal(i) + rnd() * 160)); // in AED '000
-  const activeSeries = MONTHS.map((_, i) => Math.round(2350 + i * 38 + 130 * Math.sin(i / 2.1) + rnd() * 60));
-  const newSeries = MONTHS.map((_, i) => Math.round(118 + 40 * seasonal(i) * 0.7 + rnd() * 30));
-  const churnSeries = MONTHS.map((_, i) => Math.round(72 + 22 * Math.sin(i / 1.7 + 2) + rnd() * 24));
+  const newSeries = new Array(18).fill(0);
+  const churnSeries = new Array(18).fill(0);
+  firstMonth.forEach((mi) => { newSeries[mi]++; });
+  lastMonth.forEach((mi) => { if (mi + 3 < 18) churnSeries[mi + 3]++; });
 
-  // ── Category transition matrix (last quarter, counts) ────────
-  // rows: from, cols: to · mostly diagonal + adjacent-tier moves
-  const baseSize = { VIP: 130, XXL: 240, XL: 430, L: 660, M: 920, S: 1080, XS: 740, XXS: 520 };
-  const TRANSITIONS = {};
-  SEGMENTS.forEach((f, fi) => {
-    TRANSITIONS[f] = {};
-    SEGMENTS.forEach((t, ti) => {
-      const d = Math.abs(fi - ti);
-      let v;
-      if (f === t) v = Math.round(baseSize[f] * (0.78 + rnd() * 0.1));
-      else if (d === 1) v = Math.round(baseSize[f] * (0.03 + rnd() * 0.06));
-      else if (d === 2) v = Math.round(baseSize[f] * rnd() * 0.018);
-      else v = rnd() < 0.88 ? 0 : ri(1, 4);
-      TRANSITIONS[f][t] = v;
-    });
+  // ── boutique stats, summed from the same rows ──────────────────
+  const locAgg = LOCATIONS.map(() => ({ rev: 0, n: 0, clients: new Set() }));
+  for (let i = 0; i < total; i++) {
+    if (sDay[i] <= CUT_12M) continue;                  // trailing 12 months
+    const a = locAgg[sLoc[i]];
+    a.rev += sAmount[i]; a.n++; a.clients.add(sClient[i]);
+  }
+  const locStats = LOCATIONS.map((l, i) => {
+    const a = locAgg[i];
+    const prev = locAgg[i].rev * rf(0.86, 1.14);       // a plausible prior year
+    return {
+      ...l,
+      revenue: Math.round(a.rev / 1000),               // AED '000
+      clients: a.clients.size,
+      avgBasket: a.n ? Math.round(a.rev / a.n) : 0,
+      retention: ri(58, 84),
+      growth: Math.round(((a.rev - prev) / prev) * 1000) / 10,
+    };
   });
 
-  // ── Location stats ────────────────────────────────────────────
-  const locStats = LOCATIONS.map((l, idx) => ({
-    ...l,
-    revenue: Math.round(28400 * l.share * (0.92 + rnd() * 0.16)), // AED '000 / 12mo
-    clients: Math.round(3120 * l.share * (0.9 + rnd() * 0.2)),
-    avgBasket: ri(265, 520),
-    retention: ri(58, 84),
-    growth: [12.4, 8.1, 15.2, 6.8, 4.2, -2.1][idx],
-  }));
+  // ── transition matrix, counted rather than simulated ───────────
+  const TRANSITIONS = {};
+  SEGMENTS.forEach((f) => { TRANSITIONS[f] = {}; SEGMENTS.forEach((t) => { TRANSITIONS[f][t] = 0; }); });
+  clients.forEach((c) => { TRANSITIONS[c.prevSeg][c.seg]++; });
 
-  // ── Team, uploads, audit trail, exports ───────────────────────
+  // ── headline KPIs, so no screen has to hardcode one ────────────
+  const rev12 = clients.reduce((a, c) => a + c.spend12m, 0);
+  const ord12 = clients.reduce((a, c) => a + c.orders12m, 0);
+  const KPI = {
+    clients: clients.length,
+    transactions: total,
+    revenue12m: rev12,
+    orders12m: ord12,
+    avgBasket: ord12 ? Math.round(rev12 / ord12) : 0,
+    activeNow: clients.filter((c) => c.lastDays <= 180).length,
+    revenueLastMonth: revenueSeries[17],   // May 2026, the last complete month
+    generatedMs: 0,
+  };
+
+  // ── team, uploads, audit trail, exports ────────────────────────
   const TEAM = [
     { id: "u1", name: "Sara Khalifa", role: "CRM Lead", email: "sara.k@alwaha.example" },
     { id: "u2", name: "Omar Haddad", role: "Data Analyst", email: "omar.h@alwaha.example" },
@@ -150,7 +345,7 @@
   ];
 
   const UPLOADS = [
-    { file: "clients_master_jun.csv", kind: "Clients", rows: 3128, ok: 3120, status: "Processed", by: "Omar Haddad", date: "9 Jun 2026, 18:42", note: "8 rows skipped — duplicate IDs" },
+    { file: "clients_master_jun.csv", kind: "Clients", rows: 2043, ok: 2035, status: "Processed", by: "Omar Haddad", date: "9 Jun 2026, 18:42", note: "8 rows skipped — duplicate IDs" },
     { file: "pos_transactions_w23.xlsx", kind: "Transactions", rows: 18450, ok: 18450, status: "Processed", by: "Ravi Menon", date: "8 Jun 2026, 07:15", note: "" },
     { file: "optin_update_sms.csv", kind: "Opt-ins", rows: 412, ok: 0, status: "Failed", by: "Lina Farouk", date: "6 Jun 2026, 14:03", note: "Missing consent_date column" },
     { file: "optin_update_sms_v2.csv", kind: "Opt-ins", rows: 412, ok: 409, status: "Processed", by: "Lina Farouk", date: "6 Jun 2026, 15:21", note: "3 unknown client IDs" },
@@ -163,7 +358,7 @@
     { user: "Sara Khalifa", action: "Changed tier threshold", target: "Settings · Categories", detail: "XL minimum: AED 12,000 → AED 15,000", ts: "10 Jun 2026, 06:58" },
     { user: "System", action: "Nightly tier re-assignment", target: "All clients", detail: "214 clients re-tiered (96 ↑ / 118 ↓)", ts: "10 Jun 2026, 02:00" },
     { user: "Lina Farouk", action: "Updated opt-in", target: "C1042 · Reem Al Zaabi", detail: "SMS: opted-out → opted-in (store consent form)", ts: "9 Jun 2026, 16:22" },
-    { user: "Omar Haddad", action: "Uploaded file", target: "clients_master_jun.csv", detail: "3,120 of 3,128 rows imported", ts: "9 Jun 2026, 18:42" },
+    { user: "Omar Haddad", action: "Uploaded file", target: "clients_master_jun.csv", detail: "2,035 of 2,043 rows imported", ts: "9 Jun 2026, 18:42" },
     { user: "Sara Khalifa", action: "Merged duplicates", target: "C1077 ← C1119", detail: "Same phone +971 50 ··· 4471; kept earlier first-purchase date", ts: "9 Jun 2026, 10:14" },
     { user: "Ravi Menon", action: "Created API key", target: "POS Bridge · production", detail: "Scope: transactions:write, clients:read", ts: "8 Jun 2026, 08:30" },
     { user: "Lina Farouk", action: "Exported report", target: "Inactive XL+ clients", detail: "CSV · 312 rows · for win-back campaign", ts: "7 Jun 2026, 13:45" },
@@ -183,7 +378,36 @@
     { name: "Boutique performance", format: "XLSX", range: "May 2026", by: "Sara Khalifa", date: "1 Jun 2026", size: "204 KB" },
   ];
 
-  window.CRM = { clients, LOCATIONS, locStats, SEGMENTS, SEG_META, TIER_MIN, TYPES, MONTHS, revenueSeries, activeSeries, newSeries, churnSeries, TRANSITIONS, PRODUCTS, TEAM, UPLOADS, AUDIT, EXPORTS };
+  // ── the order history of one client, newest first ──────────────
+  // Objects are built only for the rows actually asked for. A drawer shows
+  // twenty; inflating a hundred thousand rows to hand back twenty would undo
+  // the reason the transactions are in typed arrays at all.
+  function ordersFor(client, limit) {
+    const rows = byClient[client.row] || [];
+    const take = Math.min(limit || 20, rows.length);
+    const out = new Array(take);
+    for (let k = 0; k < take; k++) {
+      const r = rows[rows.length - 1 - k];               // newest first
+      out[k] = {
+        date: fmtDate(dayToDate(sDay[r])),
+        daysAgo: daysAgo(sDay[r]),
+        amount: Math.round(sAmount[r]),
+        location: LOCATIONS[sLoc[r]].name,
+        product: PRODUCTS[sProduct[r]],
+      };
+    }
+    return out;
+  }
+
+  KPI.generatedMs = Math.round((window.performance || Date).now() - T0);
+
+  window.CRM = {
+    clients, LOCATIONS, locStats, SEGMENTS, SEG_META, TIER_MIN, TYPES, MONTHS,
+    revenueSeries: revenueK, activeSeries, newSeries, churnSeries,
+    TRANSITIONS, PRODUCTS, TEAM, UPLOADS, AUDIT, EXPORTS, KPI, ordersFor,
+    // raw transactions, for anything that wants to read them
+    tx: { n: total, client: sClient, day: sDay, amount: sAmount, loc: sLoc, product: sProduct },
+  };
 })();
 
 })();
@@ -2027,8 +2251,33 @@ function OverviewScreen({
 }) {
   const C = CRM;
   const last = C.revenueSeries.length - 1;
-  const revDelta = (C.revenueSeries[last] - C.revenueSeries[last - 1]) / C.revenueSeries[last - 1] * 100;
-  const actDelta = (C.activeSeries[last] - C.activeSeries[last - 1]) / C.activeSeries[last - 1] * 100;
+  // Every delta is a real month-over-month change in the generated data, not a
+  // number typed into the markup. `pct` guards the divide so an empty month
+  // shows no delta rather than Infinity.
+  const pct = (a, b) => b ? (a - b) / b * 100 : null;
+  const revDelta = pct(C.revenueSeries[last], C.revenueSeries[last - 1]);
+  const actDelta = pct(C.activeSeries[last], C.activeSeries[last - 1]);
+  const newDelta = pct(C.newSeries[last], C.newSeries[last - 1]);
+  // Basket size for the last month vs the one before, summed from transactions.
+  const basketOf = mi => {
+    const t = C.tx;
+    let sum = 0,
+      n = 0;
+    for (let i = t.n - 1; i >= 0; i--) {
+      const d = new Date(Date.UTC(2026, 5, 10) - (730 - t.day[i]) * 864e5);
+      const key = d.getUTCFullYear() * 12 + d.getUTCMonth();
+      if (key === mi) {
+        sum += t.amount[i];
+        n++;
+      } else if (key < mi) break;
+    }
+    return n ? sum / n : 0;
+  };
+  // May 2026 against April — the last two complete months, matching the series.
+  const basketDelta = React.useMemo(() => {
+    const mayKey = 2026 * 12 + 4;
+    return pct(basketOf(mayKey), basketOf(mayKey - 1));
+  }, []);
   const segCounts = useMemo(() => {
     const m = {};
     C.SEGMENTS.forEach(s => m[s] = 0);
@@ -2055,33 +2304,32 @@ function OverviewScreen({
   }, "Browse clients"))), /*#__PURE__*/React.createElement("div", {
     className: "kpi-row"
   }, /*#__PURE__*/React.createElement(Kpi, {
-    label: "Active clients",
+    label: "Buying clients \xB7 May",
     value: fmtNum(C.activeSeries[last]),
     delta: actDelta,
-    deltaLabel: "vs May",
+    deltaLabel: "vs Apr",
     spark: C.activeSeries.slice(-10),
     accent: true
   }), /*#__PURE__*/React.createElement(Kpi, {
-    label: "Revenue \xB7 MTD",
-    value: "AED 2.41M",
+    label: "Revenue \xB7 May",
+    value: "AED " + fmtK(C.revenueSeries[last]),
     delta: revDelta,
-    deltaLabel: "vs May",
+    deltaLabel: "vs Apr",
     spark: C.revenueSeries.slice(-10)
   }), /*#__PURE__*/React.createElement(Kpi, {
     label: "Avg basket",
-    value: "AED 386",
-    delta: 3.2,
-    deltaLabel: "vs May"
+    value: fmtAED(C.KPI.avgBasket),
+    delta: basketDelta,
+    deltaLabel: "vs Apr"
   }), /*#__PURE__*/React.createElement(Kpi, {
-    label: "12-mo retention",
-    value: "71.4%",
-    delta: -1.8,
-    deltaLabel: "vs Q1"
+    label: "Active base",
+    value: (C.KPI.activeNow / C.KPI.clients * 100).toFixed(1) + "%",
+    deltaLabel: fmtNum(C.KPI.activeNow) + " bought in 180d"
   }), /*#__PURE__*/React.createElement(Kpi, {
-    label: "New clients \xB7 MTD",
+    label: "New clients \xB7 May",
     value: fmtNum(C.newSeries[last]),
-    delta: 11.5,
-    deltaLabel: "vs May"
+    delta: newDelta,
+    deltaLabel: "vs Apr"
   })), /*#__PURE__*/React.createElement("div", {
     className: "grid-2-1"
   }, /*#__PURE__*/React.createElement("section", {
@@ -2246,6 +2494,9 @@ function ClientsScreen({
     dir: -1
   });
   const [openId, setOpenId] = useState(params.open || null);
+  // 2,000 clients sort and filter instantly, but painting 2,000 table rows is
+  // what a phone would actually feel. Render a window, and let it grow.
+  const [shown, setShown] = useState(50);
   useEffect(() => {
     if (params.seg) setSeg(params.seg);
     if (params.status) setStatus(params.status);
@@ -2257,6 +2508,13 @@ function ClientsScreen({
     r.sort((a, b) => (a[sort.key] > b[sort.key] ? 1 : -1) * sort.dir * (typeof a[sort.key] === "string" ? -1 : 1));
     return r;
   }, [q, seg, status, type, loc, sort, activeDays]);
+
+  // Any change to what is being looked at starts the window again at the top —
+  // otherwise a narrow filter inherits a window opened for a broad one.
+  useEffect(() => {
+    setShown(50);
+  }, [q, seg, status, type, loc, sort]);
+  const LIMIT = shown;
   const th = (label, key, num) => /*#__PURE__*/React.createElement("th", {
     className: num ? "num" : "",
     onClick: () => setSort(s => ({
@@ -2321,7 +2579,7 @@ function ClientsScreen({
     className: "card table-card"
   }, /*#__PURE__*/React.createElement("table", {
     className: "table"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, th("Client", "name"), /*#__PURE__*/React.createElement("th", null, "Category"), th("Status", "lastDays"), th("12-mo spend", "spend12m", true), th("Avg order", "avgOrder", true), th("Orders / yr", "orders12m", true), th("First purchase", "sinceYear", true), th("Last purchase", "lastDays", true), /*#__PURE__*/React.createElement("th", null, "Opt-ins"))), /*#__PURE__*/React.createElement("tbody", null, rows.slice(0, 40).map(c => /*#__PURE__*/React.createElement("tr", {
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, th("Client", "name"), /*#__PURE__*/React.createElement("th", null, "Category"), th("Status", "lastDays"), th("12-mo spend", "spend12m", true), th("Avg order", "avgOrder", true), th("Orders / yr", "orders12m", true), th("First purchase", "sinceYear", true), th("Last purchase", "lastDays", true), /*#__PURE__*/React.createElement("th", null, "Opt-ins"))), /*#__PURE__*/React.createElement("tbody", null, rows.slice(0, LIMIT).map(c => /*#__PURE__*/React.createElement("tr", {
     key: c.id,
     onClick: () => setOpenId(c.id)
   }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", {
@@ -2353,9 +2611,15 @@ function ClientsScreen({
   })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement(OptIns, {
     optIn: c.optIn,
     labels: false
-  })))))), rows.length > 40 && /*#__PURE__*/React.createElement("div", {
+  })))))), rows.length > LIMIT && /*#__PURE__*/React.createElement("div", {
     className: "table-foot muted"
-  }, "Showing 40 of ", rows.length, " \u2014 refine filters to narrow down"), rows.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, "Showing ", fmtNum(LIMIT), " of ", fmtNum(rows.length), " matching clients \u2014 filter or sort to bring the ones you want to the top.", shown < rows.length && /*#__PURE__*/React.createElement("button", {
+    className: "btn ghost sm-btn",
+    style: {
+      marginLeft: 12
+    },
+    onClick: () => setShown(shown + 200)
+  }, "Show 200 more")), rows.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "table-foot muted"
   }, "No clients match these filters.")), open && /*#__PURE__*/React.createElement(ClientProfile, {
     client: open,
@@ -2379,6 +2643,9 @@ function ClientProfile({
   }, []);
   const loc = CRM.LOCATIONS.find(l => l.id === c.loc);
   const months = CRM.MONTHS.slice(-12);
+  // Built on open, for this client only — eight rows out of ~100,000, which is
+  // the whole point of keeping the transactions in typed arrays.
+  const orders = React.useMemo(() => CRM.ordersFor(c, 8), [c.id]);
   const max = Math.max(...c.monthly, 1);
   const moved = c.prevSeg !== c.seg;
   return /*#__PURE__*/React.createElement("div", {
@@ -2431,6 +2698,22 @@ function ClientProfile({
       opacity: v > 0 ? 1 : 0.25
     }
   }), i % 3 === 0 && /*#__PURE__*/React.createElement("span", null, months[i].split(" ")[0]))))), /*#__PURE__*/React.createElement("div", {
+    className: "profile-section"
+  }, /*#__PURE__*/React.createElement("h3", null, "Recent orders ", /*#__PURE__*/React.createElement("span", {
+    className: "muted sm"
+  }, "\xB7 ", fmtNum(c.ordersAll), " on file")), orders.length ? /*#__PURE__*/React.createElement("table", {
+    className: "table mini-orders"
+  }, /*#__PURE__*/React.createElement("tbody", null, orders.map((o, i) => /*#__PURE__*/React.createElement("tr", {
+    key: i
+  }, /*#__PURE__*/React.createElement("td", {
+    className: "muted"
+  }, o.date), /*#__PURE__*/React.createElement("td", null, o.product), /*#__PURE__*/React.createElement("td", {
+    className: "muted sm"
+  }, o.location), /*#__PURE__*/React.createElement("td", {
+    className: "num"
+  }, /*#__PURE__*/React.createElement("b", null, fmtAED(o.amount))))))) : /*#__PURE__*/React.createElement("p", {
+    className: "muted sm"
+  }, "No purchases on record.")), /*#__PURE__*/React.createElement("div", {
     className: "profile-section"
   }, /*#__PURE__*/React.createElement("h3", null, "Contact & marketing consent"), /*#__PURE__*/React.createElement("dl", {
     className: "detail-list"

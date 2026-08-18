@@ -10,6 +10,9 @@ function ClientsScreen({ params, go, activeDays }) {
   const [loc, setLoc] = useState("All");
   const [sort, setSort] = useState({ key: "spend12m", dir: -1 });
   const [openId, setOpenId] = useState(params.open || null);
+  // 2,000 clients sort and filter instantly, but painting 2,000 table rows is
+  // what a phone would actually feel. Render a window, and let it grow.
+  const [shown, setShown] = useState(50);
 
   useEffect(() => { if (params.seg) setSeg(params.seg); if (params.status) setStatus(params.status); if (params.open) setOpenId(params.open); }, [params]);
 
@@ -26,6 +29,11 @@ function ClientsScreen({ params, go, activeDays }) {
     r.sort((a, b) => (a[sort.key] > b[sort.key] ? 1 : -1) * sort.dir * (typeof a[sort.key] === "string" ? -1 : 1));
     return r;
   }, [q, seg, status, type, loc, sort, activeDays]);
+
+  // Any change to what is being looked at starts the window again at the top —
+  // otherwise a narrow filter inherits a window opened for a broad one.
+  useEffect(() => { setShown(50); }, [q, seg, status, type, loc, sort]);
+  const LIMIT = shown;
 
   const th = (label, key, num) => (
     <th className={num ? "num" : ""} onClick={() => setSort((s) => ({ key, dir: s.key === key ? -s.dir : -1 }))}>
@@ -85,7 +93,7 @@ function ClientsScreen({ params, go, activeDays }) {
             </tr>
           </thead>
           <tbody>
-            {rows.slice(0, 40).map((c) => (
+            {rows.slice(0, LIMIT).map((c) => (
               <tr key={c.id} onClick={() => setOpenId(c.id)}>
                 <td><div className="cell-client"><Avatar name={c.name} type={c.type} /><div><span className="cl-name">{c.name}</span><span className="cl-id muted">{c.id} · {c.type}</span></div></div></td>
                 <td><SegBadge seg={c.seg} small /></td>
@@ -100,7 +108,15 @@ function ClientsScreen({ params, go, activeDays }) {
             ))}
           </tbody>
         </table>
-        {rows.length > 40 && <div className="table-foot muted">Showing 40 of {rows.length} — refine filters to narrow down</div>}
+        {rows.length > LIMIT && (
+          <div className="table-foot muted">
+            Showing {fmtNum(LIMIT)} of {fmtNum(rows.length)} matching clients — filter or sort to bring the ones you want to the top.
+            {shown < rows.length && (
+              <button className="btn ghost sm-btn" style={{ marginLeft: 12 }}
+                      onClick={() => setShown(shown + 200)}>Show 200 more</button>
+            )}
+          </div>
+        )}
         {rows.length === 0 && <div className="table-foot muted">No clients match these filters.</div>}
       </section>
 
@@ -118,6 +134,9 @@ function ClientProfile({ client: c, onClose, go, active }) {
   }, []);
   const loc = CRM.LOCATIONS.find((l) => l.id === c.loc);
   const months = CRM.MONTHS.slice(-12);
+  // Built on open, for this client only — eight rows out of ~100,000, which is
+  // the whole point of keeping the transactions in typed arrays.
+  const orders = React.useMemo(() => CRM.ordersFor(c, 8), [c.id]);
   const max = Math.max(...c.monthly, 1);
   const moved = c.prevSeg !== c.seg;
   return (
@@ -154,6 +173,24 @@ function ClientProfile({ client: c, onClose, go, active }) {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="profile-section">
+          <h3>Recent orders <span className="muted sm">· {fmtNum(c.ordersAll)} on file</span></h3>
+          {orders.length ? (
+            <table className="table mini-orders">
+              <tbody>
+                {orders.map((o, i) => (
+                  <tr key={i}>
+                    <td className="muted">{o.date}</td>
+                    <td>{o.product}</td>
+                    <td className="muted sm">{o.location}</td>
+                    <td className="num"><b>{fmtAED(o.amount)}</b></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : <p className="muted sm">No purchases on record.</p>}
         </div>
 
         <div className="profile-section">
